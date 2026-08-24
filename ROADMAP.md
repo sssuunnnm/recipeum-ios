@@ -10,6 +10,16 @@ Build RecipeUm as a local-first iPhone recipe archive before adding sync, AI ext
 
 The immediate goal is to create a reliable core archive that preserves user-entered recipe data even when the original source URL disappears.
 
+## Planning Levels
+
+Use three levels when planning implementation work.
+
+- Phase: product-level milestone from `SPEC.md`
+- PR: reviewable delivery unit sized for CodeRabbit and human review
+- Task: concrete implementation step inside a PR
+
+PRs should be large enough to produce meaningful review feedback, but small enough that model, parser, persistence, and UI risks do not become indistinguishable.
+
 ## Development Order
 
 ### 1. Repository Hygiene
@@ -41,16 +51,30 @@ Create the iOS app project.
 
 Implement the smallest useful local recipe archive.
 
-- SwiftData models
-- recipe CRUD
-- ingredient groups
-- natural-language ingredient entry
-- multi-line ingredient paste
+#### PR 1 — Core Models And Ingredient Parser
+
+- SwiftData recipe domain models
+- ingredient group, ingredient, cooking step, and source metadata models
 - basic ingredient parser
-- parse review/edit
+- raw ingredient text preservation
+- parser tests for common Korean recipe input
+
+#### PR 2 — Ingredient Input And Review Flow
+
+- single-line natural-language ingredient input
+- multi-line ingredient paste
+- parsed result display
+- review/edit state for uncertain parsing
+- manual correction of parsed fields
+
+#### PR 3 — Recipe CRUD And Detail Fields
+
+- recipe list
+- create, read, update, and delete recipes
 - cooking steps
 - personal notes
 - source metadata
+- save and reopen flow
 
 ### 4. Parser Tests And Edge Cases
 
@@ -66,16 +90,18 @@ Important early examples:
 - `소금 취향껏`
 - `대파 흰 부분 손가락 두 마디 정도`
 
-### 5. Basic CRUD UI
+### 5. Post-PR3 UI Refinement
 
-Connect the core archive behavior to a usable app interface.
+Polish the Phase 1 archive after PR 3 has delivered the first usable CRUD flow.
+This section should not duplicate PR 3 scope. Move items here only when they are
+follow-up refinements that improve the implemented CRUD experience without
+changing the Phase 1 source-of-truth behavior in `SPEC.md`.
 
-- recipe list
-- add recipe
-- edit recipe
-- recipe detail
-- save and reopen flow
 - basic empty states
+- list sorting and grouping refinements
+- detail layout polish
+- form validation copy
+- small navigation and editing ergonomics
 
 ## Deferred Until The Core Is Stable
 
