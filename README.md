@@ -41,6 +41,14 @@ Recipes discovered on YouTube, blogs, or the web should remain useful even if th
 - `GIT_WORKFLOW.md` — branch, commit, and PR rules
 - `AI_WORKFLOW.md` — AI-assisted development workflow
 
+## Project Structure
+
+- `RecipeUm/RecipeUm.xcodeproj` — Xcode project
+- `RecipeUm/RecipeUm` — iOS app source
+- `RecipeUm/RecipeUmTests` — unit and Swift Testing target
+- `RecipeUm/RecipeUmUITests` — UI test target
+- root `*.md` files — product, workflow, and repository planning documents
+
 ## Development Status
 
 The repository has initial planning documents and a generated SwiftUI / SwiftData iOS project.
