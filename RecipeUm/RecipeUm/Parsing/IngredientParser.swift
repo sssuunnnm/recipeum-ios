@@ -9,7 +9,7 @@ import Foundation
 
 struct IngredientParser {
     private let nonNumericAmountTexts = ["약간", "적당량", "취향껏"]
-    private let unitPattern = "(작은술|큰술|티스푼|스푼|킬로그램|밀리리터|그램|리터|kg|ml|g|L|l|컵|개|대|쪽|알|장)"
+    private let unitPattern = "(작은술|큰술|티스푼|스푼|킬로그램|킬로|키로|밀리리터|밀리|미리|그램|그람|리터|kg|ml|g|L|l|컵|개|대|쪽|알|장)"
     private let amountPattern = "(\\d+(?:\\.\\d+)?|\\d+/\\d+|반)"
 
     func parseLine(_ line: String) -> ParsedIngredient {
@@ -149,15 +149,15 @@ struct IngredientParser {
             return lowercaseUnit
         }
 
-        if unit == "그램" {
+        if ["그램", "그람"].contains(unit) {
             return "g"
         }
 
-        if unit == "킬로그램" {
+        if ["킬로그램", "킬로", "키로"].contains(unit) {
             return "kg"
         }
 
-        if unit == "밀리리터" {
+        if ["밀리리터", "밀리", "미리"].contains(unit) {
             return "ml"
         }
 
