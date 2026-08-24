@@ -14,22 +14,27 @@ The immediate goal is to create a reliable core archive that preserves user-ente
 
 ### 1. Repository Hygiene
 
+Status: complete for initial setup.
+
 Set up the project foundation before application code grows.
 
 - `.gitignore`
 - `README.md`
-- license decision
-- root folder and Xcode project layout
+- license decision: no open-source license yet
+- root folder and Xcode project layout: generated app project in top-level `RecipeUm/`
 - initial repository conventions
 
 ### 2. Xcode Project Setup
+
+Status: complete for initial setup.
 
 Create the iOS app project.
 
 - SwiftUI app target
 - SwiftData-ready configuration
 - iPhone-first layout direction
-- app display name decision
+- app display name decision: `RecipeUm`
+- deployment target: iOS 17.0
 - test target setup
 
 ### 3. Phase 1 Core Archive
@@ -92,4 +97,3 @@ These features should not shape the first implementation.
 - Move items when implementation evidence suggests a better order.
 - Do not treat roadmap order as product truth; `SPEC.md` remains the source of truth for behavior.
 - When roadmap changes reflect a meaningful product or architecture decision, record the reason in `DECISIONS.md`.
-

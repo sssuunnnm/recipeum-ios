@@ -207,3 +207,86 @@ Build a reliable manual + paste workflow first.
 ### Consequence
 
 Future AI extraction can feed into the same reviewable structured recipe model instead of defining the initial architecture.
+
+---
+
+## D012 — Keep project documents at the repository root initially
+
+### Context
+
+The project is starting with a small set of stable planning documents.
+
+Creating a deeper documentation folder structure now would add navigation overhead before the app code exists.
+
+### Decision
+
+Keep `SPEC.md`, `ROADMAP.md`, `DECISIONS.md`, `AGENTS.md`, `GIT_WORKFLOW.md`, and `AI_WORKFLOW.md` at the repository root during the initial setup phase.
+
+### Consequence
+
+The repository stays easy to scan while the product and app structure are still forming.
+
+The documents may be moved into a dedicated folder later if the number of supporting documents grows.
+
+---
+
+## D013 — Do not add an open-source license yet
+
+### Context
+
+RecipeUm is intended as a real app/service, but the public distribution and reuse policy has not been decided yet.
+
+### Decision
+
+Do not add a `LICENSE` file during initial setup.
+
+State in `README.md` that no open-source license has been selected.
+
+### Consequence
+
+The project remains visible in GitHub while avoiding accidental permission for external reuse before the product direction is settled.
+
+An explicit license can be added later when the distribution strategy is clear.
+
+---
+
+## D014 — Keep the generated Xcode project in a top-level app folder
+
+### Context
+
+The repository is dedicated to the iOS app.
+
+Xcode generated the app project inside a top-level `RecipeUm/` folder within the repository.
+
+### Decision
+
+Keep the generated structure:
+
+- `RecipeUm/RecipeUm.xcodeproj`
+- `RecipeUm/RecipeUm`
+- `RecipeUm/RecipeUmTests`
+- `RecipeUm/RecipeUmUITests`
+
+### Consequence
+
+Repository-level planning documents remain easy to scan at the root, while generated app files stay grouped together.
+
+If additional packages, tooling, or platform targets are introduced later, the repository layout can be revisited with a recorded decision.
+
+---
+
+## D015 — Use iOS 17.0 as the initial deployment target
+
+### Context
+
+RecipeUm uses SwiftData for local persistence.
+
+SwiftData requires iOS 17 or later, while the generated Xcode project initially used the current SDK version as the deployment target.
+
+### Decision
+
+Set `IPHONEOS_DEPLOYMENT_TARGET` to `17.0` for the initial app and test targets.
+
+### Consequence
+
+The app keeps SwiftData support while avoiding an unnecessarily narrow device support window.

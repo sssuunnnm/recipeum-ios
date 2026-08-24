@@ -5,6 +5,8 @@
 DerivedData/
 build/
 *.xcuserdata/
+xcuserdata/
+*.xcuserdatad/
 *.xcuserstate
 *.xcscmblueprint
 
@@ -30,4 +32,3 @@ fastlane/test_output/
 .env
 .env.*
 *.local
-
