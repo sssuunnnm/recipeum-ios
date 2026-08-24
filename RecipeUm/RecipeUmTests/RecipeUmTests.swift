@@ -110,6 +110,26 @@ struct RecipeUmTests {
         #expect(volume.parseStatus == .parsed)
     }
 
+    @Test func parsesKoreanMetricUnits() {
+        let weight = parser.parseLine("소고기 100그램")
+        let volume = parser.parseLine("물 500밀리리터")
+        let liter = parser.parseLine("육수 1리터")
+
+        #expect(weight.name == "소고기")
+        #expect(weight.amountText == "100")
+        #expect(weight.amountValue == 100)
+        #expect(weight.unit == "g")
+        #expect(weight.parseStatus == .parsed)
+        #expect(volume.name == "물")
+        #expect(volume.amountText == "500")
+        #expect(volume.unit == "ml")
+        #expect(volume.parseStatus == .parsed)
+        #expect(liter.name == "육수")
+        #expect(liter.amountText == "1")
+        #expect(liter.unit == "L")
+        #expect(liter.parseStatus == .parsed)
+    }
+
     @Test func parsesBulletedIngredientLineWhilePreservingRawText() {
         let result = parser.parseLine("- 양파 1개")
 
