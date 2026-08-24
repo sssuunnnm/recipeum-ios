@@ -136,6 +136,62 @@ struct RecipeUmTests {
         #expect(ingredient.parseStatus == .parsed)
     }
 
+    @Test func buildsIngredientReviewStateFromMultilineInput() {
+        var state = IngredientReviewState(inputText: """
+        돼지고기 300g
+        후추 약간
+        대파 흰 부분 손가락 두 마디 정도
+        """)
+
+        state.parseInput(using: parser)
+
+        #expect(state.items.count == 3)
+        #expect(state.reviewRequiredCount == 1)
+        #expect(state.items[0].rawText == "돼지고기 300g")
+        #expect(state.items[0].name == "돼지고기")
+        #expect(state.items[1].amountText == "약간")
+        #expect(state.items[2].rawText == "대파 흰 부분 손가락 두 마디 정도")
+        #expect(state.items[2].parseStatus == .needsReview)
+    }
+
+    @Test func appliesManualIngredientCorrection() {
+        var state = IngredientReviewState(inputText: "대파 흰 부분 손가락 두 마디 정도")
+        state.parseInput(using: parser)
+
+        let itemID = state.items[0].id
+        state.updateItem(
+            id: itemID,
+            name: "대파 흰 부분",
+            amountText: "2",
+            unit: "마디"
+        )
+
+        #expect(state.reviewRequiredCount == 0)
+        #expect(state.items[0].rawText == "대파 흰 부분 손가락 두 마디 정도")
+        #expect(state.items[0].name == "대파 흰 부분")
+        #expect(state.items[0].amountText == "2")
+        #expect(state.items[0].amountValue == 2)
+        #expect(state.items[0].unit == "마디")
+        #expect(state.items[0].parseStatus == .parsed)
+    }
+
+    @Test func createsIngredientsFromReviewItemsInOrder() {
+        var state = IngredientReviewState(inputText: """
+        설탕 1/2큰술
+        소금 취향껏
+        """)
+
+        state.parseInput(using: parser)
+        let ingredients = state.makeIngredients()
+
+        #expect(ingredients.count == 2)
+        #expect(ingredients[0].rawText == "설탕 1/2큰술")
+        #expect(ingredients[0].amountValue == 0.5)
+        #expect(ingredients[0].sortOrder == 0)
+        #expect(ingredients[1].rawText == "소금 취향껏")
+        #expect(ingredients[1].sortOrder == 1)
+    }
+
     @Test @MainActor func exposesChildrenInSortOrder() throws {
         let schema = Schema([
             Recipe.self,

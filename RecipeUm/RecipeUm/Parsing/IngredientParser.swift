@@ -91,8 +91,8 @@ struct IngredientParser {
 
         guard
             !name.isEmpty,
-            let lowerValue = numericValue(from: lowerText),
-            let upperValue = numericValue(from: upperText)
+            let lowerValue = IngredientAmountValueParser.numericValue(from: lowerText),
+            let upperValue = IngredientAmountValueParser.numericValue(from: upperText)
         else {
             return nil
         }
@@ -126,33 +126,11 @@ struct IngredientParser {
             rawText: rawText,
             name: name,
             amountText: amountText,
-            amountValue: numericValue(from: amountText),
+            amountValue: IngredientAmountValueParser.numericValue(from: amountText),
             amountUpperValue: nil,
             unit: unit,
             parseStatus: .parsed
         )
-    }
-
-    private func numericValue(from amountText: String) -> Double? {
-        if amountText == "반" {
-            return 0.5
-        }
-
-        if amountText.contains("/") {
-            let parts = amountText.split(separator: "/")
-            guard
-                parts.count == 2,
-                let numerator = Double(parts[0]),
-                let denominator = Double(parts[1]),
-                denominator != 0
-            else {
-                return nil
-            }
-
-            return numerator / denominator
-        }
-
-        return Double(amountText)
     }
 
     private func normalizedUnit(_ unit: String?) -> String? {
