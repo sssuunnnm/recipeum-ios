@@ -10,6 +10,7 @@ import SwiftUI
 struct IngredientInputView: View {
     @State private var reviewState = IngredientReviewState()
     @State private var editingItem: IngredientReviewItem?
+    @FocusState private var isIngredientInputFocused: Bool
 
     private let exampleText = """
     돼지고기 300g
@@ -26,11 +27,13 @@ struct IngredientInputView: View {
             Section {
                 TextEditor(text: $reviewState.inputText)
                     .frame(minHeight: 180)
+                    .focused($isIngredientInputFocused)
                     .accessibilityLabel("재료 입력")
 
                 HStack {
                     Button {
                         reviewState.inputText = exampleText
+                        isIngredientInputFocused = false
                         reviewState.parseInput()
                     } label: {
                         Label("예시", systemImage: "text.badge.plus")
@@ -40,6 +43,7 @@ struct IngredientInputView: View {
                     Spacer()
 
                     Button {
+                        isIngredientInputFocused = false
                         reviewState.parseInput()
                     } label: {
                         Label("파싱", systemImage: "wand.and.sparkles")
