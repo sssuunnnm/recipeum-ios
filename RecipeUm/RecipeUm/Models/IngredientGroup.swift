@@ -17,6 +17,12 @@ final class IngredientGroup {
     @Relationship(deleteRule: .cascade, inverse: \RecipeIngredient.group)
     var ingredients: [RecipeIngredient]
 
+    var sortedIngredients: [RecipeIngredient] {
+        ingredients.sorted { lhs, rhs in
+            lhs.sortOrder < rhs.sortOrder
+        }
+    }
+
     init(
         title: String,
         sortOrder: Int,
@@ -27,4 +33,3 @@ final class IngredientGroup {
         self.ingredients = ingredients
     }
 }
-

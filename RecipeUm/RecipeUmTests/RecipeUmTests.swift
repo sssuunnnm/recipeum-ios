@@ -96,6 +96,20 @@ struct RecipeUmTests {
         #expect(result.parseStatus == .parsed)
     }
 
+    @Test func parsesUppercaseAsciiUnits() {
+        let weight = parser.parseLine("돼지고기 300G")
+        let volume = parser.parseLine("물 1L")
+
+        #expect(weight.name == "돼지고기")
+        #expect(weight.amountText == "300")
+        #expect(weight.unit == "g")
+        #expect(weight.parseStatus == .parsed)
+        #expect(volume.name == "물")
+        #expect(volume.amountText == "1")
+        #expect(volume.unit == "L")
+        #expect(volume.parseStatus == .parsed)
+    }
+
     @Test func parsesMultipleNonEmptyLines() {
         let results = parser.parseLines("""
         돼지고기 300g
@@ -120,6 +134,41 @@ struct RecipeUmTests {
         #expect(ingredient.amountValue == 300)
         #expect(ingredient.unit == "g")
         #expect(ingredient.parseStatus == .parsed)
+    }
+
+    @Test @MainActor func exposesChildrenInSortOrder() throws {
+        let schema = Schema([
+            Recipe.self,
+            IngredientGroup.self,
+            RecipeIngredient.self,
+            CookingStep.self,
+            RecipeSource.self,
+        ])
+        let configuration = ModelConfiguration(schema: schema, isStoredInMemoryOnly: true)
+        let container = try ModelContainer(for: schema, configurations: [configuration])
+        let recipe = Recipe(title: "김치찌개")
+        let laterGroup = IngredientGroup(title: "양념", sortOrder: 1)
+        let firstGroup = IngredientGroup(title: "기본 재료", sortOrder: 0)
+        let laterStep = CookingStep(sortOrder: 1, instruction: "끓인다.")
+        let firstStep = CookingStep(sortOrder: 0, instruction: "재료를 넣는다.")
+        let laterIngredient = RecipeIngredient(rawText: "고춧가루 1큰술", name: "고춧가루", sortOrder: 1)
+        let firstIngredient = RecipeIngredient(rawText: "김치 300g", name: "김치", sortOrder: 0)
+
+        recipe.ingredientGroups = [laterGroup, firstGroup]
+        recipe.cookingSteps = [laterStep, firstStep]
+        firstGroup.ingredients = [laterIngredient, firstIngredient]
+
+        container.mainContext.insert(recipe)
+        try container.mainContext.save()
+
+        let savedRecipes = try container.mainContext.fetch(FetchDescriptor<Recipe>())
+
+        #expect(savedRecipes.count == 1)
+        let savedRecipe = try #require(savedRecipes.first)
+
+        #expect(savedRecipe.sortedIngredientGroups.map(\.title) == ["기본 재료", "양념"])
+        #expect(savedRecipe.sortedCookingSteps.map(\.instruction) == ["재료를 넣는다.", "끓인다."])
+        #expect(savedRecipe.sortedIngredientGroups.first?.sortedIngredients.map(\.name) == ["김치", "고춧가루"])
     }
 
     @Test @MainActor func storesRecipeArchiveDataLocally() throws {

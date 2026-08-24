@@ -30,6 +30,18 @@ final class Recipe {
     @Relationship(deleteRule: .cascade, inverse: \RecipeSource.recipe)
     var source: RecipeSource?
 
+    var sortedIngredientGroups: [IngredientGroup] {
+        ingredientGroups.sorted { lhs, rhs in
+            lhs.sortOrder < rhs.sortOrder
+        }
+    }
+
+    var sortedCookingSteps: [CookingStep] {
+        cookingSteps.sorted { lhs, rhs in
+            lhs.sortOrder < rhs.sortOrder
+        }
+    }
+
     init(
         title: String,
         recipeDescription: String? = nil,
@@ -64,4 +76,3 @@ final class Recipe {
         updatedAt = date
     }
 }
-

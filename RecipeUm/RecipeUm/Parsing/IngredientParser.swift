@@ -160,7 +160,13 @@ struct IngredientParser {
             return nil
         }
 
-        if unit == "l" {
+        let lowercaseUnit = unit.lowercased()
+
+        if ["g", "kg", "ml"].contains(lowercaseUnit) {
+            return lowercaseUnit
+        }
+
+        if lowercaseUnit == "l" {
             return "L"
         }
 
@@ -168,7 +174,7 @@ struct IngredientParser {
     }
 
     private func firstMatch(pattern: String, in text: String) -> [String]? {
-        guard let regex = try? NSRegularExpression(pattern: pattern) else {
+        guard let regex = try? NSRegularExpression(pattern: pattern, options: [.caseInsensitive]) else {
             return nil
         }
 
@@ -196,4 +202,3 @@ private extension Array where Element == String {
         return self[index]
     }
 }
-
