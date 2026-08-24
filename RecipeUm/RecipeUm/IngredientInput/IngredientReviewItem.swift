@@ -33,10 +33,15 @@ struct IngredientReviewItem: Identifiable, Equatable {
     }
 
     mutating func applyManualCorrection(name: String, amountText: String?, unit: String?) {
+        let correctedAmountText = amountText?.trimmedNilIfEmpty
+        let amountTextDidChange = correctedAmountText != self.amountText
+
         self.name = name.trimmingCharacters(in: .whitespacesAndNewlines)
-        self.amountText = amountText?.trimmedNilIfEmpty
-        self.amountValue = self.amountText.flatMap(IngredientAmountValueParser.numericValue)
-        self.amountUpperValue = nil
+        self.amountText = correctedAmountText
+        if amountTextDidChange {
+            self.amountValue = correctedAmountText.flatMap(IngredientAmountValueParser.numericValue)
+            self.amountUpperValue = nil
+        }
         self.unit = unit?.trimmedNilIfEmpty
         self.parseStatus = self.name.isEmpty ? .needsReview : .parsed
     }

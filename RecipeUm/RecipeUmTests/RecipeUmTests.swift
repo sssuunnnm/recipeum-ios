@@ -255,6 +255,29 @@ struct RecipeUmTests {
         #expect(state.items[0].parseStatus == .parsed)
     }
 
+    @Test func preservesRangeAmountValuesWhenCorrectionKeepsAmountText() {
+        var state = IngredientReviewState(inputText: "계란 2~3개")
+        state.parseInput(using: parser)
+
+        let itemID = state.items[0].id
+        state.updateItem(
+            id: itemID,
+            name: "달걀",
+            amountText: "2~3",
+            unit: "개"
+        )
+
+        let ingredient = state.makeIngredients()[0]
+
+        #expect(ingredient.rawText == "계란 2~3개")
+        #expect(ingredient.name == "달걀")
+        #expect(ingredient.amountText == "2~3")
+        #expect(ingredient.amountValue == 2)
+        #expect(ingredient.amountUpperValue == 3)
+        #expect(ingredient.unit == "개")
+        #expect(ingredient.parseStatus == .parsed)
+    }
+
     @Test func createsIngredientsFromReviewItemsInOrder() {
         var state = IngredientReviewState(inputText: """
         설탕 1/2큰술
