@@ -110,6 +110,37 @@ struct RecipeUmTests {
         #expect(volume.parseStatus == .parsed)
     }
 
+    @Test func parsesBulletedIngredientLineWhilePreservingRawText() {
+        let result = parser.parseLine("- 양파 1개")
+
+        #expect(result.rawText == "- 양파 1개")
+        #expect(result.name == "양파")
+        #expect(result.amountText == "1")
+        #expect(result.amountValue == 1)
+        #expect(result.unit == "개")
+        #expect(result.parseStatus == .parsed)
+    }
+
+    @Test func parsesNumberedIngredientLineWhilePreservingRawText() {
+        let result = parser.parseLine("1. 진간장 2큰술")
+
+        #expect(result.rawText == "1. 진간장 2큰술")
+        #expect(result.name == "진간장")
+        #expect(result.amountText == "2")
+        #expect(result.unit == "큰술")
+        #expect(result.parseStatus == .parsed)
+    }
+
+    @Test func parsesIngredientWithTrailingNote() {
+        let result = parser.parseLine("대파 1대(흰 부분)")
+
+        #expect(result.rawText == "대파 1대(흰 부분)")
+        #expect(result.name == "대파")
+        #expect(result.amountText == "1")
+        #expect(result.unit == "대")
+        #expect(result.parseStatus == .parsed)
+    }
+
     @Test func parsesMultipleNonEmptyLines() {
         let results = parser.parseLines("""
         돼지고기 300g

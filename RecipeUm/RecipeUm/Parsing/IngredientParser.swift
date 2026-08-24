@@ -14,6 +14,7 @@ struct IngredientParser {
 
     func parseLine(_ line: String) -> ParsedIngredient {
         let rawText = line.trimmingCharacters(in: .whitespacesAndNewlines)
+        let parseText = normalizedParseText(from: rawText)
 
         guard !rawText.isEmpty else {
             return ParsedIngredient(
@@ -23,15 +24,15 @@ struct IngredientParser {
             )
         }
 
-        if let parsedNonNumeric = parseNonNumericAmount(from: rawText) {
+        if let parsedNonNumeric = parseNonNumericAmount(rawText: rawText, parseText: parseText) {
             return parsedNonNumeric
         }
 
-        if let parsedRange = parseRange(from: rawText) {
+        if let parsedRange = parseRange(rawText: rawText, parseText: parseText) {
             return parsedRange
         }
 
-        if let parsedSingleAmount = parseSingleAmount(from: rawText) {
+        if let parsedSingleAmount = parseSingleAmount(rawText: rawText, parseText: parseText) {
             return parsedSingleAmount
         }
 
@@ -50,13 +51,15 @@ struct IngredientParser {
             .map(parseLine)
     }
 
-    private func parseNonNumericAmount(from rawText: String) -> ParsedIngredient? {
+    private func parseNonNumericAmount(rawText: String, parseText: String) -> ParsedIngredient? {
+        let text = removingTrailingNote(from: parseText)
+
         for amountText in nonNumericAmountTexts {
-            guard rawText.hasSuffix(amountText) else {
+            guard text.hasSuffix(amountText) else {
                 continue
             }
 
-            let name = rawText
+            let name = text
                 .dropLast(amountText.count)
                 .trimmingCharacters(in: .whitespacesAndNewlines)
 
@@ -78,9 +81,10 @@ struct IngredientParser {
         return nil
     }
 
-    private func parseRange(from rawText: String) -> ParsedIngredient? {
+    private func parseRange(rawText: String, parseText: String) -> ParsedIngredient? {
+        let text = removingTrailingNote(from: parseText)
         let pattern = "^(.+?)\\s*\(amountPattern)\\s*[~-]\\s*\(amountPattern)\\s*\(unitPattern)?$"
-        guard let match = firstMatch(pattern: pattern, in: rawText) else {
+        guard let match = firstMatch(pattern: pattern, in: text) else {
             return nil
         }
 
@@ -108,9 +112,10 @@ struct IngredientParser {
         )
     }
 
-    private func parseSingleAmount(from rawText: String) -> ParsedIngredient? {
+    private func parseSingleAmount(rawText: String, parseText: String) -> ParsedIngredient? {
+        let text = removingTrailingNote(from: parseText)
         let pattern = "^(.+?)\\s*\(amountPattern)\\s*\(unitPattern)?$"
-        guard let match = firstMatch(pattern: pattern, in: rawText) else {
+        guard let match = firstMatch(pattern: pattern, in: text) else {
             return nil
         }
 
@@ -151,6 +156,18 @@ struct IngredientParser {
         return unit
     }
 
+    private func normalizedParseText(from rawText: String) -> String {
+        let bulletPattern = "^\\s*(?:[-*•·]\\s+|\\d+[.)]\\s+)"
+        return replacingFirstMatch(pattern: bulletPattern, in: rawText, with: "")
+            .trimmingCharacters(in: .whitespacesAndNewlines)
+    }
+
+    private func removingTrailingNote(from text: String) -> String {
+        let trailingNotePattern = "\\s*(?:\\([^)]*\\)|\\[[^\\]]*\\])\\s*$"
+        return replacingFirstMatch(pattern: trailingNotePattern, in: text, with: "")
+            .trimmingCharacters(in: .whitespacesAndNewlines)
+    }
+
     private func firstMatch(pattern: String, in text: String) -> [String]? {
         guard let regex = try? NSRegularExpression(pattern: pattern, options: [.caseInsensitive]) else {
             return nil
@@ -168,6 +185,23 @@ struct IngredientParser {
             }
             return String(text[range])
         }
+    }
+
+    private func replacingFirstMatch(pattern: String, in text: String, with replacement: String) -> String {
+        guard let regex = try? NSRegularExpression(pattern: pattern, options: [.caseInsensitive]) else {
+            return text
+        }
+
+        let range = NSRange(text.startIndex..<text.endIndex, in: text)
+        guard let match = regex.firstMatch(in: text, range: range) else {
+            return text
+        }
+
+        return regex.stringByReplacingMatches(
+            in: text,
+            range: match.range,
+            withTemplate: replacement
+        )
     }
 }
 
