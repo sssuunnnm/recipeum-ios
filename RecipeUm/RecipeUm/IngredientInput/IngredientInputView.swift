@@ -9,6 +9,7 @@ import SwiftUI
 
 struct IngredientInputView: View {
     @State private var reviewState = IngredientReviewState()
+    @State private var editingItem: IngredientReviewItem?
 
     private let exampleText = """
     돼지고기 300g
@@ -55,7 +56,9 @@ struct IngredientInputView: View {
             Section {
                 if reviewState.hasReviewItems {
                     ForEach(reviewState.items) { item in
-                        IngredientReviewRow(item: item)
+                        IngredientReviewRow(item: item) {
+                            editingItem = item
+                        }
                     }
                 } else {
                     ContentUnavailableView(
@@ -77,6 +80,16 @@ struct IngredientInputView: View {
             }
         }
         .navigationTitle("재료 입력")
+        .sheet(item: $editingItem) { item in
+            IngredientCorrectionView(item: item) { name, amountText, unit in
+                reviewState.updateItem(
+                    id: item.id,
+                    name: name,
+                    amountText: amountText,
+                    unit: unit
+                )
+            }
+        }
     }
 
     private var reviewCountColor: Color {
@@ -86,6 +99,7 @@ struct IngredientInputView: View {
 
 private struct IngredientReviewRow: View {
     let item: IngredientReviewItem
+    let onEdit: () -> Void
 
     var body: some View {
         VStack(alignment: .leading, spacing: 8) {
@@ -112,6 +126,16 @@ private struct IngredientReviewRow: View {
                 if let unit = item.unit {
                     LabeledContent("단위", value: unit)
                 }
+
+                Spacer()
+
+                Button {
+                    onEdit()
+                } label: {
+                    Label("수정", systemImage: "pencil")
+                        .labelStyle(.iconOnly)
+                }
+                .buttonStyle(.borderless)
             }
             .font(.caption)
         }
@@ -124,6 +148,62 @@ private struct IngredientReviewRow: View {
 
     private var statusIcon: String {
         item.needsReview ? "exclamationmark.circle" : "checkmark.circle"
+    }
+}
+
+private struct IngredientCorrectionView: View {
+    @Environment(\.dismiss) private var dismiss
+
+    let item: IngredientReviewItem
+    let onSave: (_ name: String, _ amountText: String?, _ unit: String?) -> Void
+
+    @State private var name: String
+    @State private var amountText: String
+    @State private var unit: String
+
+    init(
+        item: IngredientReviewItem,
+        onSave: @escaping (_ name: String, _ amountText: String?, _ unit: String?) -> Void
+    ) {
+        self.item = item
+        self.onSave = onSave
+        _name = State(initialValue: item.name)
+        _amountText = State(initialValue: item.amountText ?? "")
+        _unit = State(initialValue: item.unit ?? "")
+    }
+
+    var body: some View {
+        NavigationStack {
+            Form {
+                Section("원문") {
+                    Text(item.rawText)
+                        .foregroundStyle(.secondary)
+                }
+
+                Section("구조화 필드") {
+                    TextField("재료명", text: $name)
+                    TextField("수량", text: $amountText)
+                        .keyboardType(.numbersAndPunctuation)
+                    TextField("단위", text: $unit)
+                }
+            }
+            .navigationTitle("재료 수정")
+            .navigationBarTitleDisplayMode(.inline)
+            .toolbar {
+                ToolbarItem(placement: .cancellationAction) {
+                    Button("취소") {
+                        dismiss()
+                    }
+                }
+
+                ToolbarItem(placement: .confirmationAction) {
+                    Button("완료") {
+                        onSave(name, amountText, unit)
+                        dismiss()
+                    }
+                }
+            }
+        }
     }
 }
 
