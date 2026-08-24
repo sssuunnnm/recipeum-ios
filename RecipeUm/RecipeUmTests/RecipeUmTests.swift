@@ -110,6 +110,86 @@ struct RecipeUmTests {
         #expect(volume.parseStatus == .parsed)
     }
 
+    @Test func parsesKoreanMetricUnits() {
+        let weight = parser.parseLine("소고기 100그램")
+        let volume = parser.parseLine("물 500밀리리터")
+        let liter = parser.parseLine("육수 1리터")
+
+        #expect(weight.name == "소고기")
+        #expect(weight.amountText == "100")
+        #expect(weight.amountValue == 100)
+        #expect(weight.unit == "g")
+        #expect(weight.parseStatus == .parsed)
+        #expect(volume.name == "물")
+        #expect(volume.amountText == "500")
+        #expect(volume.unit == "ml")
+        #expect(volume.parseStatus == .parsed)
+        #expect(liter.name == "육수")
+        #expect(liter.amountText == "1")
+        #expect(liter.unit == "L")
+        #expect(liter.parseStatus == .parsed)
+    }
+
+    @Test func parsesCommonKoreanUnitAliases() {
+        let kilo = parser.parseLine("소고기 1키로")
+        let kilogram = parser.parseLine("돼지고기 2킬로")
+        let gram = parser.parseLine("소금 5그람")
+        let milli = parser.parseLine("물 500미리")
+        let milliliter = parser.parseLine("우유 200밀리")
+
+        #expect(kilo.name == "소고기")
+        #expect(kilo.amountText == "1")
+        #expect(kilo.unit == "kg")
+        #expect(kilo.parseStatus == .parsed)
+        #expect(kilogram.name == "돼지고기")
+        #expect(kilogram.amountText == "2")
+        #expect(kilogram.unit == "kg")
+        #expect(kilogram.parseStatus == .parsed)
+        #expect(gram.name == "소금")
+        #expect(gram.amountText == "5")
+        #expect(gram.unit == "g")
+        #expect(gram.parseStatus == .parsed)
+        #expect(milli.name == "물")
+        #expect(milli.amountText == "500")
+        #expect(milli.unit == "ml")
+        #expect(milli.parseStatus == .parsed)
+        #expect(milliliter.name == "우유")
+        #expect(milliliter.amountText == "200")
+        #expect(milliliter.unit == "ml")
+        #expect(milliliter.parseStatus == .parsed)
+    }
+
+    @Test func parsesBulletedIngredientLineWhilePreservingRawText() {
+        let result = parser.parseLine("- 양파 1개")
+
+        #expect(result.rawText == "- 양파 1개")
+        #expect(result.name == "양파")
+        #expect(result.amountText == "1")
+        #expect(result.amountValue == 1)
+        #expect(result.unit == "개")
+        #expect(result.parseStatus == .parsed)
+    }
+
+    @Test func parsesNumberedIngredientLineWhilePreservingRawText() {
+        let result = parser.parseLine("1. 진간장 2큰술")
+
+        #expect(result.rawText == "1. 진간장 2큰술")
+        #expect(result.name == "진간장")
+        #expect(result.amountText == "2")
+        #expect(result.unit == "큰술")
+        #expect(result.parseStatus == .parsed)
+    }
+
+    @Test func parsesIngredientWithTrailingNote() {
+        let result = parser.parseLine("대파 1대(흰 부분)")
+
+        #expect(result.rawText == "대파 1대(흰 부분)")
+        #expect(result.name == "대파")
+        #expect(result.amountText == "1")
+        #expect(result.unit == "대")
+        #expect(result.parseStatus == .parsed)
+    }
+
     @Test func parsesMultipleNonEmptyLines() {
         let results = parser.parseLines("""
         돼지고기 300g
@@ -134,6 +214,85 @@ struct RecipeUmTests {
         #expect(ingredient.amountValue == 300)
         #expect(ingredient.unit == "g")
         #expect(ingredient.parseStatus == .parsed)
+    }
+
+    @Test func buildsIngredientReviewStateFromMultilineInput() {
+        var state = IngredientReviewState(inputText: """
+        돼지고기 300g
+        후추 약간
+        대파 흰 부분 손가락 두 마디 정도
+        """)
+
+        state.parseInput(using: parser)
+
+        #expect(state.items.count == 3)
+        #expect(state.reviewRequiredCount == 1)
+        #expect(state.items[0].rawText == "돼지고기 300g")
+        #expect(state.items[0].name == "돼지고기")
+        #expect(state.items[1].amountText == "약간")
+        #expect(state.items[2].rawText == "대파 흰 부분 손가락 두 마디 정도")
+        #expect(state.items[2].parseStatus == .needsReview)
+    }
+
+    @Test func appliesManualIngredientCorrection() {
+        var state = IngredientReviewState(inputText: "대파 흰 부분 손가락 두 마디 정도")
+        state.parseInput(using: parser)
+
+        let itemID = state.items[0].id
+        state.updateItem(
+            id: itemID,
+            name: "대파 흰 부분",
+            amountText: "2",
+            unit: "마디"
+        )
+
+        #expect(state.reviewRequiredCount == 0)
+        #expect(state.items[0].rawText == "대파 흰 부분 손가락 두 마디 정도")
+        #expect(state.items[0].name == "대파 흰 부분")
+        #expect(state.items[0].amountText == "2")
+        #expect(state.items[0].amountValue == 2)
+        #expect(state.items[0].unit == "마디")
+        #expect(state.items[0].parseStatus == .parsed)
+    }
+
+    @Test func preservesRangeAmountValuesWhenCorrectionKeepsAmountText() {
+        var state = IngredientReviewState(inputText: "계란 2~3개")
+        state.parseInput(using: parser)
+
+        let itemID = state.items[0].id
+        state.updateItem(
+            id: itemID,
+            name: "달걀",
+            amountText: "2~3",
+            unit: "개"
+        )
+
+        let ingredient = state.makeIngredients()[0]
+
+        #expect(ingredient.rawText == "계란 2~3개")
+        #expect(ingredient.name == "달걀")
+        #expect(ingredient.amountText == "2~3")
+        #expect(ingredient.amountValue == 2)
+        #expect(ingredient.amountUpperValue == 3)
+        #expect(ingredient.unit == "개")
+        #expect(ingredient.parseStatus == .parsed)
+    }
+
+    @Test func createsIngredientsFromReviewItemsInOrder() {
+        var state = IngredientReviewState(inputText: """
+        설탕 1/2큰술
+        소금 취향껏
+        """)
+
+        state.parseInput(using: parser)
+        let ingredients = state.makeIngredients()
+
+        #expect(ingredients.count == 2)
+        #expect(ingredients[0].rawText == "설탕 1/2큰술")
+        #expect(ingredients[0].amountValue == 0.5)
+        #expect(ingredients[0].sortOrder == 0)
+        #expect(ingredients[1].rawText == "소금 취향껏")
+        #expect(ingredients[1].sortOrder == 1)
     }
 
     @Test @MainActor func exposesChildrenInSortOrder() throws {
