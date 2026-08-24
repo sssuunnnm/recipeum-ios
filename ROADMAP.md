@@ -90,16 +90,18 @@ Important early examples:
 - `소금 취향껏`
 - `대파 흰 부분 손가락 두 마디 정도`
 
-### 5. Basic CRUD UI
+### 5. Post-PR3 UI Refinement
 
-Connect the core archive behavior to a usable app interface.
+Polish the Phase 1 archive after PR 3 has delivered the first usable CRUD flow.
+This section should not duplicate PR 3 scope. Move items here only when they are
+follow-up refinements that improve the implemented CRUD experience without
+changing the Phase 1 source-of-truth behavior in `SPEC.md`.
 
-- recipe list
-- add recipe
-- edit recipe
-- recipe detail
-- save and reopen flow
 - basic empty states
+- list sorting and grouping refinements
+- detail layout polish
+- form validation copy
+- small navigation and editing ergonomics
 
 ## Deferred Until The Core Is Stable
 
