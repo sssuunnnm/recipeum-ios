@@ -15,13 +15,30 @@ struct RecipeListView: View {
 
     var body: some View {
         NavigationStack {
-            Group {
+            VStack(alignment: .leading, spacing: 16) {
+                HStack(alignment: .center) {
+                    Text("RecipeUm")
+                        .font(.largeTitle.bold())
+
+                    Spacer()
+
+                    Button {
+                        isPresentingNewRecipe = true
+                    } label: {
+                        Label("레시피 추가", systemImage: "plus")
+                    }
+                    .buttonStyle(.borderedProminent)
+                }
+                .padding(.horizontal)
+                .padding(.top, 12)
+
                 if recipes.isEmpty {
                     ContentUnavailableView {
                         Label("저장된 레시피 없음", systemImage: "book.closed")
                     } description: {
                         Text("좋아하는 레시피를 내 방식대로 저장해 보세요.")
                     }
+                    .frame(maxWidth: .infinity, maxHeight: .infinity)
                 } else {
                     List {
                         ForEach(recipes) { recipe in
@@ -32,18 +49,10 @@ struct RecipeListView: View {
                             }
                         }
                     }
+                    .listStyle(.plain)
                 }
             }
-            .navigationTitle("RecipeUm")
-            .toolbar {
-                ToolbarItem(placement: .topBarTrailing) {
-                    Button {
-                        isPresentingNewRecipe = true
-                    } label: {
-                        Label("레시피 추가", systemImage: "plus")
-                    }
-                }
-            }
+            .navigationBarTitleDisplayMode(.inline)
             .sheet(isPresented: $isPresentingNewRecipe) {
                 RecipeEditorView(navigationTitle: "레시피 추가") { draft in
                     modelContext.insert(draft.makeRecipe())

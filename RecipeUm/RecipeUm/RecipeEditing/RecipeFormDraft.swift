@@ -21,7 +21,7 @@ struct RecipeFormDraft: Equatable {
     var sourceTitleOrMemo: String = ""
 
     var canSave: Bool {
-        !title.trimmed.isEmpty
+        !title.trimmed.isEmpty && !ingredientText.trimmed.isEmpty
     }
 
     init() {}

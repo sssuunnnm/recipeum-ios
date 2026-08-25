@@ -10,10 +10,39 @@ import SwiftUI
 struct RecipeEditorView: View {
     @Environment(\.dismiss) private var dismiss
 
+    private static let categoryOptions = [
+        "",
+        "밥",
+        "면",
+        "국/찌개",
+        "반찬",
+        "고기",
+        "해산물",
+        "디저트",
+        "음료",
+        "기타",
+    ]
+
     let navigationTitle: String
     let onSave: (RecipeFormDraft) -> Void
 
     @State private var draft: RecipeFormDraft
+    @State private var isOptionalInfoExpanded = false
+    @State private var isCookingStepsExpanded = false
+    @State private var isSourceExpanded = false
+    @State private var isNotesExpanded = false
+
+    private var categoryOptions: [String] {
+        let currentCategoryName = draft.categoryName.trimmingCharacters(in: .whitespacesAndNewlines)
+
+        guard !currentCategoryName.isEmpty,
+              !Self.categoryOptions.contains(currentCategoryName)
+        else {
+            return Self.categoryOptions
+        }
+
+        return Self.categoryOptions + [currentCategoryName]
+    }
 
     init(
         navigationTitle: String,
@@ -28,56 +57,58 @@ struct RecipeEditorView: View {
     var body: some View {
         NavigationStack {
             Form {
-                Section("기본 정보") {
-                    TextField("레시피 이름", text: $draft.title)
-                    TextField("분량", text: $draft.servingText)
-                    TextField("조리 시간(분)", text: $draft.cookingTimeMinutesText)
-                        .keyboardType(.numberPad)
-                    TextField("카테고리", text: $draft.categoryName)
-                }
-
-                Section("소개") {
-                    TextField("간단한 설명", text: $draft.recipeDescription, axis: .vertical)
-                        .lineLimit(2...4)
-                }
-
                 Section {
+                    TextField("레시피 이름", text: $draft.title)
                     TextEditor(text: $draft.ingredientText)
                         .frame(minHeight: 140)
                         .accessibilityLabel("재료")
                 } header: {
-                    Text("재료")
+                    Text("필수")
                 } footer: {
-                    Text("한 줄에 하나씩 입력하면 저장할 때 구조화된 재료로 보관됩니다.")
+                    Text("재료는 한 줄에 하나씩 입력하면 저장할 때 구조화된 재료로 보관됩니다.")
                 }
 
-                Section {
-                    TextEditor(text: $draft.cookingStepText)
-                        .frame(minHeight: 140)
-                        .accessibilityLabel("조리 단계")
-                } header: {
-                    Text("조리 단계")
-                } footer: {
-                    Text("한 줄에 하나씩 입력한 순서대로 저장됩니다.")
-                }
+                Section("선택 정보") {
+                    DisclosureGroup("기본 세부 정보", isExpanded: $isOptionalInfoExpanded) {
+                        TextField("분량", text: $draft.servingText)
+                        TextField("조리 시간(분)", text: $draft.cookingTimeMinutesText)
+                            .keyboardType(.numberPad)
 
-                Section("출처") {
-                    Picker("종류", selection: $draft.sourceType) {
-                        ForEach(RecipeSourceType.allCases, id: \.self) { sourceType in
-                            Text(sourceType.displayName).tag(sourceType)
+                        Picker("카테고리", selection: $draft.categoryName) {
+                            ForEach(categoryOptions, id: \.self) { categoryName in
+                                Text(categoryName.isEmpty ? "선택 안 함" : categoryName)
+                                    .tag(categoryName)
+                            }
                         }
-                    }
-                    TextField("URL", text: $draft.sourceURLString)
-                        .keyboardType(.URL)
-                        .textInputAutocapitalization(.never)
-                        .autocorrectionDisabled()
-                    TextField("제목 또는 메모", text: $draft.sourceTitleOrMemo)
-                }
 
-                Section("내 메모") {
-                    TextEditor(text: $draft.personalNotes)
-                        .frame(minHeight: 100)
-                        .accessibilityLabel("내 메모")
+                        TextField("간단한 설명", text: $draft.recipeDescription, axis: .vertical)
+                            .lineLimit(2...4)
+                    }
+
+                    DisclosureGroup("조리 단계", isExpanded: $isCookingStepsExpanded) {
+                        TextEditor(text: $draft.cookingStepText)
+                            .frame(minHeight: 140)
+                            .accessibilityLabel("조리 단계")
+                    }
+
+                    DisclosureGroup("출처", isExpanded: $isSourceExpanded) {
+                        Picker("종류", selection: $draft.sourceType) {
+                            ForEach(RecipeSourceType.allCases, id: \.self) { sourceType in
+                                Text(sourceType.displayName).tag(sourceType)
+                            }
+                        }
+                        TextField("URL", text: $draft.sourceURLString)
+                            .keyboardType(.URL)
+                            .textInputAutocapitalization(.never)
+                            .autocorrectionDisabled()
+                        TextField("제목 또는 메모", text: $draft.sourceTitleOrMemo)
+                    }
+
+                    DisclosureGroup("내 메모", isExpanded: $isNotesExpanded) {
+                        TextEditor(text: $draft.personalNotes)
+                            .frame(minHeight: 100)
+                            .accessibilityLabel("내 메모")
+                    }
                 }
             }
             .navigationTitle(navigationTitle)

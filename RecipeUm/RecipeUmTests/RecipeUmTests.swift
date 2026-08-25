@@ -448,6 +448,12 @@ struct RecipeUmTests {
         #expect(reopenedDraft.sourceTitleOrMemo == "집에서 적어둔 버전")
     }
 
+    @Test func requiresTitleAndIngredientsBeforeSavingRecipeDraft() {
+        #expect(!RecipeFormDraft(title: "김치볶음밥").canSave)
+        #expect(!RecipeFormDraft(title: "", ingredientText: "밥 1공기").canSave)
+        #expect(RecipeFormDraft(title: "김치볶음밥", ingredientText: "밥 1공기").canSave)
+    }
+
     @Test @MainActor func appliesDraftChangesToExistingRecipe() throws {
         let schema = Schema([
             Recipe.self,
