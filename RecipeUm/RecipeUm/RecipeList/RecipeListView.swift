@@ -12,6 +12,23 @@ struct RecipeListView: View {
     @Environment(\.modelContext) private var modelContext
     @Query(sort: \Recipe.updatedAt, order: .reverse) private var recipes: [Recipe]
     @State private var isPresentingNewRecipe = false
+    @State private var searchText = ""
+    @State private var selectedCategoryName: String?
+
+    private var filter: RecipeLibraryFilter {
+        RecipeLibraryFilter(
+            searchText: searchText,
+            categoryName: selectedCategoryName
+        )
+    }
+
+    private var filteredRecipes: [Recipe] {
+        filter.filteredRecipes(from: recipes)
+    }
+
+    private var availableCategoryNames: [String] {
+        recipes.availableCategoryNames()
+    }
 
     var body: some View {
         NavigationStack {
@@ -21,6 +38,8 @@ struct RecipeListView: View {
                         .font(.largeTitle.bold())
 
                     Spacer()
+
+                    categoryFilterMenu
 
                     Button {
                         isPresentingNewRecipe = true
@@ -47,19 +66,29 @@ struct RecipeListView: View {
                     }
                     .frame(maxWidth: .infinity, maxHeight: .infinity)
                 } else {
-                    List {
-                        ForEach(recipes) { recipe in
-                            NavigationLink {
-                                RecipeDetailView(recipe: recipe)
-                            } label: {
-                                RecipeRow(recipe: recipe)
+                    if filteredRecipes.isEmpty {
+                        ContentUnavailableView {
+                            Label("검색 결과 없음", systemImage: "magnifyingglass")
+                        } description: {
+                            Text("검색어나 카테고리 필터를 조정해 보세요.")
+                        }
+                        .frame(maxWidth: .infinity, maxHeight: .infinity)
+                    } else {
+                        List {
+                            ForEach(filteredRecipes) { recipe in
+                                NavigationLink {
+                                    RecipeDetailView(recipe: recipe)
+                                } label: {
+                                    RecipeRow(recipe: recipe)
+                                }
                             }
                         }
+                        .listStyle(.plain)
                     }
-                    .listStyle(.plain)
                 }
             }
             .navigationBarTitleDisplayMode(.inline)
+            .searchable(text: $searchText, prompt: "레시피 또는 재료 검색")
             .sheet(isPresented: $isPresentingNewRecipe) {
                 RecipeEditorView(navigationTitle: "레시피 추가") { draft in
                     let recipe = draft.makeRecipe()
@@ -73,6 +102,28 @@ struct RecipeListView: View {
                     }
                 }
             }
+        }
+    }
+
+    @ViewBuilder
+    private var categoryFilterMenu: some View {
+        if !availableCategoryNames.isEmpty || selectedCategoryName != nil {
+            Menu {
+                Button("전체") {
+                    selectedCategoryName = nil
+                }
+
+                ForEach(availableCategoryNames, id: \.self) { categoryName in
+                    Button(categoryName) {
+                        selectedCategoryName = categoryName
+                    }
+                }
+            } label: {
+                Label(selectedCategoryName ?? "카테고리 필터", systemImage: "line.3.horizontal.decrease.circle")
+                    .labelStyle(.iconOnly)
+            }
+            .buttonStyle(.bordered)
+            .accessibilityLabel(selectedCategoryName.map { "\($0) 필터 적용 중" } ?? "카테고리 필터")
         }
     }
 }
