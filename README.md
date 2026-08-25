@@ -27,8 +27,10 @@ multi-line paste, local persistence, and editable recipe detail fields.
 - Personal notes
 - Source metadata
 - Category selection
+- Recipe search by title or ingredient
+- Basic category filtering
 - Local persistence with SwiftData
-- Unit tests for parser, model ordering, save/reopen, and draft conversion flows
+- Unit tests for parser, model ordering, save/reopen, draft conversion, and library filtering flows
 
 ## Tech Stack
 
@@ -76,8 +78,10 @@ Phase 1 Core Archive is complete:
 - PR 2: ingredient input and review flow
 - PR 3: recipe CRUD and detail fields
 
-The next development area is Phase 2 Library Experience: search, favorites, and
-basic category or collection browsing.
+Phase 2 Library Experience is in progress:
+
+- PR 1: search and basic library filters
+- Next: PR 2 favorites
 
 ## Not In Scope Yet
 

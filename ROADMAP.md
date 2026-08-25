@@ -94,6 +94,8 @@ PR on polish.
 
 #### PR 1 — Search And Basic Library Filters
 
+Status: complete.
+
 - search recipes by title
 - search recipes by ingredient raw text or parsed ingredient name
 - empty search state
@@ -101,6 +103,8 @@ PR on polish.
 - tests for search/filter helpers when domain logic is extracted
 
 #### PR 2 — Favorites
+
+Status: next.
 
 - mark and unmark recipes as favorites
 - show favorite state in list and detail
