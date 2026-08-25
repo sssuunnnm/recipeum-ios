@@ -90,35 +90,8 @@ private struct RecipeRow: View {
                         .background(.thinMaterial, in: Capsule())
                 }
             }
-
-            HStack(spacing: 8) {
-                Label("\(ingredientCount)개 재료", systemImage: "leaf")
-
-                if !recipe.servingText.isEmpty {
-                    Label(recipe.servingText, systemImage: "person.2")
-                }
-
-                if let cookingTimeMinutes = recipe.cookingTimeMinutes {
-                    Label("\(cookingTimeMinutes)분", systemImage: "clock")
-                }
-            }
-            .font(.caption)
-            .foregroundStyle(.secondary)
-
-            if let recipeDescription = recipe.recipeDescription, !recipeDescription.isEmpty {
-                Text(recipeDescription)
-                    .font(.caption)
-                    .foregroundStyle(.secondary)
-                    .lineLimit(2)
-            }
         }
         .padding(.vertical, 4)
-    }
-
-    private var ingredientCount: Int {
-        recipe.sortedIngredientGroups.reduce(0) { count, group in
-            count + group.sortedIngredients.count
-        }
     }
 }
 
