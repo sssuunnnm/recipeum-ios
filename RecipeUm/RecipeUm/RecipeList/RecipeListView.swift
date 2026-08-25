@@ -62,8 +62,15 @@ struct RecipeListView: View {
             .navigationBarTitleDisplayMode(.inline)
             .sheet(isPresented: $isPresentingNewRecipe) {
                 RecipeEditorView(navigationTitle: "레시피 추가") { draft in
-                    modelContext.insert(draft.makeRecipe())
-                    try? modelContext.save()
+                    let recipe = draft.makeRecipe()
+                    modelContext.insert(recipe)
+
+                    do {
+                        try modelContext.save()
+                    } catch {
+                        modelContext.rollback()
+                        throw error
+                    }
                 }
             }
         }

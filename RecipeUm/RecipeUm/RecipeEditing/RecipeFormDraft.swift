@@ -8,6 +8,8 @@
 import Foundation
 
 struct RecipeFormDraft: Equatable {
+    private static let defaultIngredientGroupTitle = "기본 재료"
+
     var title: String = ""
     var recipeDescription: String = ""
     var servingText: String = ""
@@ -21,7 +23,14 @@ struct RecipeFormDraft: Equatable {
     var sourceTitleOrMemo: String = ""
 
     var canSave: Bool {
-        !title.trimmed.isEmpty && !ingredientText.trimmed.isEmpty
+        !title.trimmed.isEmpty
+        && !ingredientText.trimmed.isEmpty
+        && hasValidCookingTime
+    }
+
+    var hasValidCookingTime: Bool {
+        let value = cookingTimeMinutesText.trimmed
+        return value.isEmpty || Int(value) != nil
     }
 
     init() {}
@@ -33,10 +42,7 @@ struct RecipeFormDraft: Equatable {
         cookingTimeMinutesText = recipe.cookingTimeMinutes.map(String.init) ?? ""
         personalNotes = recipe.personalNotes
         categoryName = recipe.categoryName ?? ""
-        ingredientText = recipe.sortedIngredientGroups
-            .flatMap(\.sortedIngredients)
-            .map(\.rawText)
-            .joined(separator: "\n")
+        ingredientText = Self.ingredientText(from: recipe.sortedIngredientGroups)
         cookingStepText = recipe.sortedCookingSteps
             .map(\.instruction)
             .joined(separator: "\n")
@@ -87,20 +93,46 @@ struct RecipeFormDraft: Equatable {
     }
 
     private func makeIngredientGroups(parser: IngredientParser) -> [IngredientGroup] {
-        let ingredients = parser
-            .parseLines(ingredientText)
-            .enumerated()
-            .map { index, parsedIngredient in
-                parsedIngredient.makeIngredient(sortOrder: index)
+        var groups: [IngredientGroup] = []
+        var currentTitle = Self.defaultIngredientGroupTitle
+        var currentLines: [String] = []
+
+        func appendCurrentGroup() {
+            let ingredients = parser
+                .parseLines(currentLines.joined(separator: "\n"))
+                .enumerated()
+                .map { index, parsedIngredient in
+                    parsedIngredient.makeIngredient(sortOrder: index)
+                }
+
+            guard !ingredients.isEmpty else {
+                return
             }
 
-        guard !ingredients.isEmpty else {
-            return []
+            let group = IngredientGroup(title: currentTitle, sortOrder: groups.count)
+            group.ingredients = ingredients
+            groups.append(group)
         }
 
-        let group = IngredientGroup(title: "기본 재료", sortOrder: 0)
-        group.ingredients = ingredients
-        return [group]
+        ingredientText
+            .split(whereSeparator: \.isNewline)
+            .map { String($0).trimmed }
+            .forEach { line in
+                guard !line.isEmpty else {
+                    return
+                }
+
+                if let groupTitle = Self.groupTitle(from: line) {
+                    appendCurrentGroup()
+                    currentTitle = groupTitle
+                    currentLines = []
+                } else {
+                    currentLines.append(line)
+                }
+            }
+
+        appendCurrentGroup()
+        return groups
     }
 
     private func makeCookingSteps() -> [CookingStep] {
@@ -127,6 +159,46 @@ struct RecipeFormDraft: Equatable {
             urlString: urlString,
             titleOrMemo: titleOrMemo
         )
+    }
+
+    private static func ingredientText(from groups: [IngredientGroup]) -> String {
+        let sortedGroups = groups.filter { !$0.sortedIngredients.isEmpty }
+
+        guard !sortedGroups.isEmpty else {
+            return ""
+        }
+
+        let shouldIncludeGroupTitles = sortedGroups.count > 1
+        || sortedGroups.contains { $0.title != defaultIngredientGroupTitle }
+
+        return sortedGroups
+            .map { group in
+                let ingredientLines = group.sortedIngredients
+                    .map(\.rawText)
+                    .joined(separator: "\n")
+
+                guard shouldIncludeGroupTitles else {
+                    return ingredientLines
+                }
+
+                return "[\(group.title)]\n\(ingredientLines)"
+            }
+            .joined(separator: "\n\n")
+    }
+
+    private static func groupTitle(from line: String) -> String? {
+        guard line.hasPrefix("["),
+              line.hasSuffix("]")
+        else {
+            return nil
+        }
+
+        let title = line
+            .dropFirst()
+            .dropLast()
+            .trimmingCharacters(in: .whitespacesAndNewlines)
+
+        return title.isEmpty ? nil : title
     }
 }
 

@@ -24,13 +24,14 @@ struct RecipeEditorView: View {
     ]
 
     let navigationTitle: String
-    let onSave: (RecipeFormDraft) -> Void
+    let onSave: (RecipeFormDraft) throws -> Void
 
     @State private var draft: RecipeFormDraft
     @State private var isOptionalInfoExpanded = false
     @State private var isCookingStepsExpanded = false
     @State private var isSourceExpanded = false
     @State private var isNotesExpanded = false
+    @State private var saveErrorMessage: String?
 
     private var categoryOptions: [String] {
         let currentCategoryName = draft.categoryName.trimmingCharacters(in: .whitespacesAndNewlines)
@@ -47,7 +48,7 @@ struct RecipeEditorView: View {
     init(
         navigationTitle: String,
         draft: RecipeFormDraft = RecipeFormDraft(),
-        onSave: @escaping (RecipeFormDraft) -> Void
+        onSave: @escaping (RecipeFormDraft) throws -> Void
     ) {
         self.navigationTitle = navigationTitle
         self.onSave = onSave
@@ -69,7 +70,7 @@ struct RecipeEditorView: View {
                 } header: {
                     Text("필수")
                 } footer: {
-                    Text("재료는 한 줄에 하나씩 입력하면 저장할 때 구조화된 재료로 보관됩니다.")
+                    Text("재료는 한 줄에 하나씩 입력합니다. [양념]처럼 적으면 그룹으로 나눌 수 있습니다.")
                 }
 
                 Section("선택 정보") {
@@ -126,12 +127,36 @@ struct RecipeEditorView: View {
 
                 ToolbarItem(placement: .confirmationAction) {
                     Button("저장") {
-                        onSave(draft)
-                        dismiss()
+                        save()
                     }
                     .disabled(!draft.canSave)
                 }
             }
+            .alert("저장 실패", isPresented: isShowingSaveError) {
+                Button("확인", role: .cancel) {}
+            } message: {
+                Text(saveErrorMessage ?? "다시 시도해 주세요.")
+            }
+        }
+    }
+
+    private var isShowingSaveError: Binding<Bool> {
+        Binding(
+            get: { saveErrorMessage != nil },
+            set: { isPresented in
+                if !isPresented {
+                    saveErrorMessage = nil
+                }
+            }
+        )
+    }
+
+    private func save() {
+        do {
+            try onSave(draft)
+            dismiss()
+        } catch {
+            saveErrorMessage = error.localizedDescription
         }
     }
 }

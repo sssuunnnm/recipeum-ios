@@ -16,6 +16,7 @@ struct RecipeDetailView: View {
 
     @State private var isPresentingEditor = false
     @State private var isPresentingDeleteConfirmation = false
+    @State private var deleteErrorMessage: String?
 
     var body: some View {
         List {
@@ -48,13 +49,21 @@ struct RecipeDetailView: View {
             }
 
             Section("재료") {
-                if let ingredientGroup = recipe.sortedIngredientGroups.first {
-                    ForEach(ingredientGroup.sortedIngredients) { ingredient in
-                        IngredientLineView(ingredient: ingredient)
-                    }
-                } else {
+                if recipe.sortedIngredientGroups.isEmpty {
                     Text("저장된 재료 없음")
                         .foregroundStyle(.secondary)
+                } else {
+                    ForEach(recipe.sortedIngredientGroups) { ingredientGroup in
+                        if shouldShowIngredientGroupTitle {
+                            Text(ingredientGroup.title)
+                                .font(.caption.weight(.semibold))
+                                .foregroundStyle(.secondary)
+                        }
+
+                        ForEach(ingredientGroup.sortedIngredients) { ingredient in
+                            IngredientLineView(ingredient: ingredient)
+                        }
+                    }
                 }
             }
 
@@ -123,7 +132,7 @@ struct RecipeDetailView: View {
                 navigationTitle: "레시피 수정",
                 draft: RecipeFormDraft(recipe: recipe)
             ) { draft in
-                replaceDetailFields(with: draft)
+                try replaceDetailFields(with: draft)
             }
         }
         .confirmationDialog(
@@ -132,12 +141,37 @@ struct RecipeDetailView: View {
             titleVisibility: .visible
         ) {
             Button("삭제", role: .destructive) {
-                modelContext.delete(recipe)
-                try? modelContext.save()
-                dismiss()
+                deleteRecipe()
             }
 
             Button("취소", role: .cancel) {}
+        }
+        .alert("삭제 실패", isPresented: isShowingDeleteError) {
+            Button("확인", role: .cancel) {}
+        } message: {
+            Text(deleteErrorMessage ?? "다시 시도해 주세요.")
+        }
+    }
+
+    private var isShowingDeleteError: Binding<Bool> {
+        Binding(
+            get: { deleteErrorMessage != nil },
+            set: { isPresented in
+                if !isPresented {
+                    deleteErrorMessage = nil
+                }
+            }
+        )
+    }
+
+    private func deleteRecipe() {
+        do {
+            modelContext.delete(recipe)
+            try modelContext.save()
+            dismiss()
+        } catch {
+            modelContext.rollback()
+            deleteErrorMessage = error.localizedDescription
         }
     }
 
@@ -151,16 +185,26 @@ struct RecipeDetailView: View {
         || recipe.categoryName?.isEmpty == false
     }
 
-    private func replaceDetailFields(with draft: RecipeFormDraft) {
-        recipe.ingredientGroups.forEach(modelContext.delete)
-        recipe.cookingSteps.forEach(modelContext.delete)
+    private var shouldShowIngredientGroupTitle: Bool {
+        recipe.sortedIngredientGroups.count > 1
+        || recipe.sortedIngredientGroups.contains { $0.title != "기본 재료" }
+    }
 
-        if let source = recipe.source {
-            modelContext.delete(source)
+    private func replaceDetailFields(with draft: RecipeFormDraft) throws {
+        do {
+            recipe.ingredientGroups.forEach(modelContext.delete)
+            recipe.cookingSteps.forEach(modelContext.delete)
+
+            if let source = recipe.source {
+                modelContext.delete(source)
+            }
+
+            draft.apply(to: recipe)
+            try modelContext.save()
+        } catch {
+            modelContext.rollback()
+            throw error
         }
-
-        draft.apply(to: recipe)
-        try? modelContext.save()
     }
 }
 

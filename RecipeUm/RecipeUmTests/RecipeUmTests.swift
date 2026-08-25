@@ -9,6 +9,7 @@ import Testing
 import SwiftData
 @testable import RecipeUm
 
+@Suite(.serialized)
 struct RecipeUmTests {
     private let parser = IngredientParser()
 
@@ -451,7 +452,56 @@ struct RecipeUmTests {
     @Test func requiresTitleAndIngredientsBeforeSavingRecipeDraft() {
         #expect(!RecipeFormDraft(title: "김치볶음밥").canSave)
         #expect(!RecipeFormDraft(title: "", ingredientText: "밥 1공기").canSave)
+        #expect(!RecipeFormDraft(title: "김치볶음밥", cookingTimeMinutesText: "15분", ingredientText: "밥 1공기").canSave)
+        #expect(!RecipeFormDraft(title: "김치볶음밥", cookingTimeMinutesText: "abc", ingredientText: "밥 1공기").canSave)
         #expect(RecipeFormDraft(title: "김치볶음밥", ingredientText: "밥 1공기").canSave)
+        #expect(RecipeFormDraft(title: "김치볶음밥", cookingTimeMinutesText: "15", ingredientText: "밥 1공기").canSave)
+    }
+
+    @Test @MainActor func preservesIngredientGroupBoundariesInRecipeDraft() throws {
+        let schema = Schema([
+            Recipe.self,
+            IngredientGroup.self,
+            RecipeIngredient.self,
+            CookingStep.self,
+            RecipeSource.self,
+        ])
+        let configuration = ModelConfiguration(schema: schema, isStoredInMemoryOnly: true)
+        let container = try ModelContainer(for: schema, configurations: [configuration])
+        let seasoningGroup = IngredientGroup(title: "양념", sortOrder: 0)
+        seasoningGroup.ingredients = [
+            RecipeIngredient(rawText: "고추장 2스푼", name: "고추장", amountText: "2", unit: "스푼", parseStatus: .parsed, sortOrder: 0),
+            RecipeIngredient(rawText: "설탕 1스푼", name: "설탕", amountText: "1", unit: "스푼", parseStatus: .parsed, sortOrder: 1),
+        ]
+
+        let toppingGroup = IngredientGroup(title: "토핑", sortOrder: 1)
+        toppingGroup.ingredients = [
+            RecipeIngredient(rawText: "참기름 1/2스푼", name: "참기름", amountText: "1/2", unit: "스푼", parseStatus: .parsed, sortOrder: 0),
+        ]
+
+        let recipe = Recipe(title: "비빔만두")
+        recipe.ingredientGroups = [toppingGroup, seasoningGroup]
+        container.mainContext.insert(recipe)
+        try container.mainContext.save()
+
+        let draft = RecipeFormDraft(recipe: recipe)
+
+        #expect(draft.ingredientText == """
+        [양념]
+        고추장 2스푼
+        설탕 1스푼
+
+        [토핑]
+        참기름 1/2스푼
+        """)
+
+        let remadeRecipe = draft.makeRecipe()
+        container.mainContext.insert(remadeRecipe)
+        try container.mainContext.save()
+
+        #expect(remadeRecipe.sortedIngredientGroups.map(\.title) == ["양념", "토핑"])
+        #expect(remadeRecipe.sortedIngredientGroups[0].sortedIngredients.map(\.rawText) == ["고추장 2스푼", "설탕 1스푼"])
+        #expect(remadeRecipe.sortedIngredientGroups[1].sortedIngredients.map(\.rawText) == ["참기름 1/2스푼"])
     }
 
     @Test @MainActor func appliesDraftChangesToExistingRecipe() throws {
