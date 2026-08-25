@@ -11,6 +11,7 @@ import SwiftUI
 struct RecipeListView: View {
     @Environment(\.modelContext) private var modelContext
     @Query(sort: \Recipe.updatedAt, order: .reverse) private var recipes: [Recipe]
+    @State private var isPresentingNewRecipe = false
 
     var body: some View {
         NavigationStack {
@@ -35,12 +36,26 @@ struct RecipeListView: View {
             }
             .navigationTitle("RecipeUm")
             .toolbar {
+                ToolbarItem(placement: .topBarLeading) {
+                    Button {
+                        isPresentingNewRecipe = true
+                    } label: {
+                        Label("레시피 추가", systemImage: "plus")
+                    }
+                }
+
                 ToolbarItem(placement: .topBarTrailing) {
                     NavigationLink {
                         IngredientInputView()
                     } label: {
                         Label("재료 입력", systemImage: "square.and.pencil")
                     }
+                }
+            }
+            .sheet(isPresented: $isPresentingNewRecipe) {
+                RecipeEditorView(navigationTitle: "레시피 추가") { draft in
+                    modelContext.insert(draft.makeRecipe())
+                    try? modelContext.save()
                 }
             }
         }

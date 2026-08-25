@@ -384,4 +384,96 @@ struct RecipeUmTests {
         #expect(savedRecipes[0].source?.type == .youtube)
         #expect(savedRecipes[0].source?.urlString == "https://example.com/recipe")
     }
+
+    @Test @MainActor func createsRecipeFromDraftAndReopensSavedDetailFields() throws {
+        let schema = Schema([
+            Recipe.self,
+            IngredientGroup.self,
+            RecipeIngredient.self,
+            CookingStep.self,
+            RecipeSource.self,
+        ])
+        let configuration = ModelConfiguration(schema: schema, isStoredInMemoryOnly: true)
+        let container = try ModelContainer(for: schema, configurations: [configuration])
+        let draft = RecipeFormDraft(
+            title: "김치볶음밥",
+            recipeDescription: "남은 밥으로 만드는 한 그릇",
+            servingText: "1인분",
+            cookingTimeMinutesText: "15",
+            personalNotes: "김치를 충분히 볶는다.",
+            categoryName: "밥",
+            ingredientText: """
+            밥 1공기
+            김치 100그램
+            계란 1개
+            """,
+            cookingStepText: """
+            김치를 볶는다.
+            밥을 넣고 섞는다.
+            계란을 올린다.
+            """,
+            sourceType: .personal,
+            sourceTitleOrMemo: "집에서 적어둔 버전"
+        )
+
+        container.mainContext.insert(draft.makeRecipe())
+        try container.mainContext.save()
+
+        let savedRecipes = try container.mainContext.fetch(FetchDescriptor<Recipe>())
+
+        #expect(savedRecipes.count == 1)
+        let savedRecipe = try #require(savedRecipes.first)
+        let ingredientGroup = try #require(savedRecipe.sortedIngredientGroups.first)
+
+        #expect(savedRecipe.title == "김치볶음밥")
+        #expect(savedRecipe.recipeDescription == "남은 밥으로 만드는 한 그릇")
+        #expect(savedRecipe.servingText == "1인분")
+        #expect(savedRecipe.cookingTimeMinutes == 15)
+        #expect(savedRecipe.personalNotes == "김치를 충분히 볶는다.")
+        #expect(savedRecipe.categoryName == "밥")
+        #expect(ingredientGroup.title == "기본 재료")
+        #expect(ingredientGroup.sortedIngredients.map(\.rawText) == ["밥 1공기", "김치 100그램", "계란 1개"])
+        #expect(ingredientGroup.sortedIngredients[1].unit == "g")
+        #expect(savedRecipe.sortedCookingSteps.map(\.instruction) == ["김치를 볶는다.", "밥을 넣고 섞는다.", "계란을 올린다."])
+        #expect(savedRecipe.source?.type == .personal)
+        #expect(savedRecipe.source?.urlString == nil)
+        #expect(savedRecipe.source?.titleOrMemo == "집에서 적어둔 버전")
+
+        let reopenedDraft = RecipeFormDraft(recipe: savedRecipe)
+
+        #expect(reopenedDraft.title == "김치볶음밥")
+        #expect(reopenedDraft.ingredientText == "밥 1공기\n김치 100그램\n계란 1개")
+        #expect(reopenedDraft.cookingStepText == "김치를 볶는다.\n밥을 넣고 섞는다.\n계란을 올린다.")
+        #expect(reopenedDraft.sourceType == .personal)
+        #expect(reopenedDraft.sourceTitleOrMemo == "집에서 적어둔 버전")
+    }
+}
+
+private extension RecipeFormDraft {
+    init(
+        title: String,
+        recipeDescription: String = "",
+        servingText: String = "",
+        cookingTimeMinutesText: String = "",
+        personalNotes: String = "",
+        categoryName: String = "",
+        ingredientText: String = "",
+        cookingStepText: String = "",
+        sourceType: RecipeSourceType = .other,
+        sourceURLString: String = "",
+        sourceTitleOrMemo: String = ""
+    ) {
+        self.init()
+        self.title = title
+        self.recipeDescription = recipeDescription
+        self.servingText = servingText
+        self.cookingTimeMinutesText = cookingTimeMinutesText
+        self.personalNotes = personalNotes
+        self.categoryName = categoryName
+        self.ingredientText = ingredientText
+        self.cookingStepText = cookingStepText
+        self.sourceType = sourceType
+        self.sourceURLString = sourceURLString
+        self.sourceTitleOrMemo = sourceTitleOrMemo
+    }
 }
