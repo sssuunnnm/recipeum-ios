@@ -195,13 +195,17 @@ struct RecipeDetailView: View {
     }
 
     private func toggleFavorite() {
+        let originalFavoriteState = recipe.isFavorite
+        let originalUpdatedAt = recipe.updatedAt
+
         recipe.isFavorite.toggle()
         recipe.markUpdated()
 
         do {
             try modelContext.save()
         } catch {
-            modelContext.rollback()
+            recipe.isFavorite = originalFavoriteState
+            recipe.updatedAt = originalUpdatedAt
             favoriteErrorMessage = error.localizedDescription
         }
     }
