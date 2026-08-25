@@ -49,11 +49,12 @@ struct RecipeListView: View {
                         isPresentingNewRecipe = true
                     } label: {
                         Label("레시피 추가", systemImage: "plus")
+                            .labelStyle(.iconOnly)
                     }
                     .buttonStyle(.borderedProminent)
+                    .accessibilityLabel("레시피 추가")
                 }
                 .padding(.horizontal)
-                .padding(.top, 12)
 
                 if recipes.isEmpty {
                     ContentUnavailableView {
@@ -102,7 +103,7 @@ struct RecipeListView: View {
                     }
                 }
             }
-            .navigationBarTitleDisplayMode(.inline)
+            .toolbar(.hidden, for: .navigationBar)
             .searchable(text: $searchText, prompt: "레시피 또는 재료 검색")
             .sheet(isPresented: $isPresentingNewRecipe) {
                 RecipeEditorView(navigationTitle: "레시피 추가") { draft in
