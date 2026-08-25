@@ -107,7 +107,7 @@ struct RecipeListView: View {
 
     @ViewBuilder
     private var categoryFilterMenu: some View {
-        if !availableCategoryNames.isEmpty {
+        if !availableCategoryNames.isEmpty || selectedCategoryName != nil {
             Menu {
                 Button("전체") {
                     selectedCategoryName = nil

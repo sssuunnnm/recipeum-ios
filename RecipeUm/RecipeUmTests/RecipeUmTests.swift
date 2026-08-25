@@ -619,6 +619,16 @@ struct RecipeUmTests {
         #expect(dataset.recipes.availableCategoryNames() == ["밥", "분식"])
     }
 
+    @Test @MainActor func exposesEquivalentCategoryNamesOnce() throws {
+        let dataset = try makeSearchRecipeDataset([
+            SearchRecipeFixture(title: "브라우니", categoryName: "Dessert", ingredients: ["초콜릿 100그램"]),
+            SearchRecipeFixture(title: "쿠키", categoryName: "dessert", ingredients: ["버터 100그램"]),
+            SearchRecipeFixture(title: "파스타", categoryName: "Dinner", ingredients: ["면 100그램"]),
+        ])
+
+        #expect(dataset.recipes.availableCategoryNames() == ["Dessert", "Dinner"])
+    }
+
     private struct SearchRecipeFixture {
         let title: String
         var categoryName: String?
