@@ -36,19 +36,11 @@ struct RecipeListView: View {
             }
             .navigationTitle("RecipeUm")
             .toolbar {
-                ToolbarItem(placement: .topBarLeading) {
+                ToolbarItem(placement: .topBarTrailing) {
                     Button {
                         isPresentingNewRecipe = true
                     } label: {
                         Label("레시피 추가", systemImage: "plus")
-                    }
-                }
-
-                ToolbarItem(placement: .topBarTrailing) {
-                    NavigationLink {
-                        IngredientInputView()
-                    } label: {
-                        Label("재료 입력", systemImage: "square.and.pencil")
                     }
                 }
             }
