@@ -37,6 +37,13 @@ struct RecipeListView: View {
                         Label("저장된 레시피 없음", systemImage: "book.closed")
                     } description: {
                         Text("좋아하는 레시피를 내 방식대로 저장해 보세요.")
+                    } actions: {
+                        Button {
+                            isPresentingNewRecipe = true
+                        } label: {
+                            Label("첫 레시피 추가", systemImage: "plus")
+                        }
+                        .buttonStyle(.borderedProminent)
                     }
                     .frame(maxWidth: .infinity, maxHeight: .infinity)
                 } else {
@@ -67,11 +74,26 @@ private struct RecipeRow: View {
     let recipe: Recipe
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 6) {
-            Text(recipe.title)
-                .font(.headline)
+        VStack(alignment: .leading, spacing: 8) {
+            HStack(alignment: .firstTextBaseline) {
+                Text(recipe.title)
+                    .font(.headline)
+
+                Spacer()
+
+                if let categoryName = recipe.categoryName, !categoryName.isEmpty {
+                    Text(categoryName)
+                        .font(.caption)
+                        .foregroundStyle(.secondary)
+                        .padding(.horizontal, 8)
+                        .padding(.vertical, 4)
+                        .background(.thinMaterial, in: Capsule())
+                }
+            }
 
             HStack(spacing: 8) {
+                Label("\(ingredientCount)개 재료", systemImage: "leaf")
+
                 if !recipe.servingText.isEmpty {
                     Label(recipe.servingText, systemImage: "person.2")
                 }
@@ -83,14 +105,20 @@ private struct RecipeRow: View {
             .font(.caption)
             .foregroundStyle(.secondary)
 
-            if !recipe.personalNotes.isEmpty {
-                Text(recipe.personalNotes)
+            if let recipeDescription = recipe.recipeDescription, !recipeDescription.isEmpty {
+                Text(recipeDescription)
                     .font(.caption)
                     .foregroundStyle(.secondary)
                     .lineLimit(2)
             }
         }
         .padding(.vertical, 4)
+    }
+
+    private var ingredientCount: Int {
+        recipe.sortedIngredientGroups.reduce(0) { count, group in
+            count + group.sortedIngredients.count
+        }
     }
 }
 

@@ -52,6 +52,10 @@ struct RecipeEditorView: View {
         self.navigationTitle = navigationTitle
         self.onSave = onSave
         _draft = State(initialValue: draft)
+        _isOptionalInfoExpanded = State(initialValue: draft.hasBasicDetailValues)
+        _isCookingStepsExpanded = State(initialValue: !draft.cookingStepText.trimmedForEditor.isEmpty)
+        _isSourceExpanded = State(initialValue: draft.hasSourceValues)
+        _isNotesExpanded = State(initialValue: !draft.personalNotes.trimmedForEditor.isEmpty)
     }
 
     var body: some View {
@@ -134,4 +138,25 @@ struct RecipeEditorView: View {
 
 #Preview {
     RecipeEditorView(navigationTitle: "레시피 추가") { _ in }
+}
+
+private extension RecipeFormDraft {
+    var hasBasicDetailValues: Bool {
+        !servingText.trimmedForEditor.isEmpty
+        || !cookingTimeMinutesText.trimmedForEditor.isEmpty
+        || !categoryName.trimmedForEditor.isEmpty
+        || !recipeDescription.trimmedForEditor.isEmpty
+    }
+
+    var hasSourceValues: Bool {
+        sourceType != .other
+        || !sourceURLString.trimmedForEditor.isEmpty
+        || !sourceTitleOrMemo.trimmedForEditor.isEmpty
+    }
+}
+
+private extension String {
+    var trimmedForEditor: String {
+        trimmingCharacters(in: .whitespacesAndNewlines)
+    }
 }

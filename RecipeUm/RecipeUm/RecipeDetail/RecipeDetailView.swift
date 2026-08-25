@@ -19,26 +19,35 @@ struct RecipeDetailView: View {
 
     var body: some View {
         List {
-            Section("기본 정보") {
-                LabeledContent("이름", value: recipe.title)
+            Section {
+                VStack(alignment: .leading, spacing: 12) {
+                    Text(recipe.title)
+                        .font(.title2.bold())
 
-                if !recipe.servingText.isEmpty {
-                    LabeledContent("분량", value: recipe.servingText)
-                }
+                    if let recipeDescription = recipe.recipeDescription, !recipeDescription.isEmpty {
+                        Text(recipeDescription)
+                            .foregroundStyle(.secondary)
+                    }
 
-                if let cookingTimeMinutes = recipe.cookingTimeMinutes {
-                    LabeledContent("조리 시간", value: "\(cookingTimeMinutes)분")
-                }
+                    if hasSummaryValues {
+                        HStack(spacing: 8) {
+                            if !recipe.servingText.isEmpty {
+                                Label(recipe.servingText, systemImage: "person.2")
+                            }
 
-                if let categoryName = recipe.categoryName, !categoryName.isEmpty {
-                    LabeledContent("카테고리", value: categoryName)
-                }
-            }
+                            if let cookingTimeMinutes = recipe.cookingTimeMinutes {
+                                Label("\(cookingTimeMinutes)분", systemImage: "clock")
+                            }
 
-            if let recipeDescription = recipe.recipeDescription, !recipeDescription.isEmpty {
-                Section("소개") {
-                    Text(recipeDescription)
+                            if let categoryName = recipe.categoryName, !categoryName.isEmpty {
+                                Label(categoryName, systemImage: "tag")
+                            }
+                        }
+                        .font(.caption)
+                        .foregroundStyle(.secondary)
+                    }
                 }
+                .padding(.vertical, 4)
             }
 
             Section("재료") {
@@ -47,9 +56,23 @@ struct RecipeDetailView: View {
                         VStack(alignment: .leading, spacing: 4) {
                             Text(ingredient.name)
 
-                            Text(ingredient.rawText)
-                                .font(.caption)
-                                .foregroundStyle(.secondary)
+                            HStack(spacing: 6) {
+                                if let amountText = ingredient.amountText {
+                                    Text(amountText)
+                                }
+
+                                if let unit = ingredient.unit {
+                                    Text(unit)
+                                }
+
+                                if ingredient.amountText != nil || ingredient.unit != nil {
+                                    Text("·")
+                                }
+
+                                Text(ingredient.rawText)
+                            }
+                            .font(.caption)
+                            .foregroundStyle(.secondary)
                         }
                     }
                 } else {
@@ -63,8 +86,16 @@ struct RecipeDetailView: View {
                     Text("저장된 조리 단계 없음")
                         .foregroundStyle(.secondary)
                 } else {
-                    ForEach(recipe.sortedCookingSteps) { step in
-                        Text(step.instruction)
+                    ForEach(Array(recipe.sortedCookingSteps.enumerated()), id: \.offset) { index, step in
+                        HStack(alignment: .top, spacing: 10) {
+                            Text("\(index + 1)")
+                                .font(.caption.weight(.semibold))
+                                .foregroundStyle(.secondary)
+                                .frame(width: 24, height: 24)
+                                .background(.thinMaterial, in: Circle())
+
+                            Text(step.instruction)
+                        }
                     }
                 }
             }
@@ -131,6 +162,12 @@ struct RecipeDetailView: View {
 
             Button("취소", role: .cancel) {}
         }
+    }
+
+    private var hasSummaryValues: Bool {
+        !recipe.servingText.isEmpty
+        || recipe.cookingTimeMinutes != nil
+        || recipe.categoryName?.isEmpty == false
     }
 
     private func replaceDetailFields(with draft: RecipeFormDraft) {
