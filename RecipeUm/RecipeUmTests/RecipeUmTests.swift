@@ -6,6 +6,7 @@
 //
 
 import Testing
+import Foundation
 import SwiftData
 @testable import RecipeUm
 
@@ -559,6 +560,103 @@ struct RecipeUmTests {
         #expect(savedRecipe.source?.type == .blog)
         #expect(savedRecipe.source?.urlString == "https://example.com/doenjang")
         #expect(savedRecipe.source?.titleOrMemo == "참고 레시피")
+    }
+
+    @Test @MainActor func filtersRecipesByTitleSearchText() throws {
+        let dataset = try makeSearchRecipeDataset([
+            SearchRecipeFixture(title: "김치볶음밥", categoryName: "밥", ingredients: ["김치 100그램"]),
+            SearchRecipeFixture(title: "비빔만두", categoryName: "분식", ingredients: ["만두 8개"]),
+        ])
+
+        let filter = RecipeLibraryFilter(searchText: "볶음")
+        let filteredTitles = filter.filteredRecipes(from: dataset.recipes).map(\.title)
+
+        #expect(filteredTitles == ["김치볶음밥"])
+    }
+
+    @Test @MainActor func filtersRecipesByIngredientNameAndRawText() throws {
+        let dataset = try makeSearchRecipeDataset([
+            SearchRecipeFixture(title: "김치볶음밥", ingredients: ["김치 100그램"]),
+            SearchRecipeFixture(title: "비빔만두", ingredients: ["고추장 2스푼", "참기름 1/2스푼"]),
+        ])
+
+        let ingredientNameMatchTitles = RecipeLibraryFilter(searchText: "고추장")
+            .filteredRecipes(from: dataset.recipes)
+            .map(\.title)
+        let rawTextMatchTitles = RecipeLibraryFilter(searchText: "1/2")
+            .filteredRecipes(from: dataset.recipes)
+            .map(\.title)
+
+        #expect(ingredientNameMatchTitles == ["비빔만두"])
+        #expect(rawTextMatchTitles == ["비빔만두"])
+    }
+
+    @Test @MainActor func filtersRecipesByCategoryName() throws {
+        let dataset = try makeSearchRecipeDataset([
+            SearchRecipeFixture(title: "김치볶음밥", categoryName: "밥", ingredients: ["김치 100그램"]),
+            SearchRecipeFixture(title: "비빔만두", categoryName: "분식", ingredients: ["만두 8개"]),
+            SearchRecipeFixture(title: "된장찌개", categoryName: "국/찌개", ingredients: ["된장 2큰술"]),
+        ])
+
+        let filter = RecipeLibraryFilter(searchText: "김치", categoryName: "밥")
+        let matchingTitles = filter.filteredRecipes(from: dataset.recipes).map(\.title)
+        let mismatchedTitles = RecipeLibraryFilter(searchText: "김치", categoryName: "분식")
+            .filteredRecipes(from: dataset.recipes)
+            .map(\.title)
+
+        #expect(matchingTitles == ["김치볶음밥"])
+        #expect(mismatchedTitles.isEmpty)
+    }
+
+    @Test @MainActor func exposesAvailableCategoryNames() throws {
+        let dataset = try makeSearchRecipeDataset([
+            SearchRecipeFixture(title: "김치볶음밥", categoryName: "밥", ingredients: ["김치 100그램"]),
+            SearchRecipeFixture(title: "계란밥", categoryName: "밥", ingredients: ["계란 1개"]),
+            SearchRecipeFixture(title: "비빔만두", categoryName: "분식", ingredients: ["만두 8개"]),
+            SearchRecipeFixture(title: "무카테고리", ingredients: ["물 1컵"]),
+        ])
+
+        #expect(dataset.recipes.availableCategoryNames() == ["밥", "분식"])
+    }
+
+    private struct SearchRecipeFixture {
+        let title: String
+        var categoryName: String?
+        let ingredients: [String]
+    }
+
+    private struct SearchRecipeDataset {
+        let container: ModelContainer
+        let recipes: [Recipe]
+    }
+
+    @MainActor private func makeSearchRecipeDataset(_ fixtures: [SearchRecipeFixture]) throws -> SearchRecipeDataset {
+        let schema = Schema([
+            Recipe.self,
+            IngredientGroup.self,
+            RecipeIngredient.self,
+            CookingStep.self,
+            RecipeSource.self,
+        ])
+        let configuration = ModelConfiguration(schema: schema, isStoredInMemoryOnly: true)
+        let container = try ModelContainer(for: schema, configurations: [configuration])
+        let recipes = fixtures.map { fixture in
+            let recipe = Recipe(title: fixture.title, categoryName: fixture.categoryName)
+            let group = IngredientGroup(title: "기본 재료", sortOrder: 0)
+            group.ingredients = fixture.ingredients.enumerated().map { index, rawText in
+                RecipeIngredient(
+                    rawText: rawText,
+                    name: rawText.components(separatedBy: " ").first ?? rawText,
+                    sortOrder: index
+                )
+            }
+            recipe.ingredientGroups = [group]
+            container.mainContext.insert(recipe)
+            return recipe
+        }
+        try container.mainContext.save()
+
+        return SearchRecipeDataset(container: container, recipes: recipes)
     }
 }
 
