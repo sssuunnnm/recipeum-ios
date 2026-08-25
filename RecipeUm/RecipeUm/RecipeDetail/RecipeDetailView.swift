@@ -19,17 +19,14 @@ struct RecipeDetailView: View {
 
     var body: some View {
         List {
-            Section {
-                VStack(alignment: .leading, spacing: 12) {
-                    Text(recipe.title)
-                        .font(.title2.bold())
+            if hasHeaderContent {
+                Section {
+                    VStack(alignment: .leading, spacing: 12) {
+                        if let recipeDescription = recipe.recipeDescription, !recipeDescription.isEmpty {
+                            Text(recipeDescription)
+                                .foregroundStyle(.secondary)
+                        }
 
-                    if let recipeDescription = recipe.recipeDescription, !recipeDescription.isEmpty {
-                        Text(recipeDescription)
-                            .foregroundStyle(.secondary)
-                    }
-
-                    if hasSummaryValues {
                         HStack(spacing: 8) {
                             if !recipe.servingText.isEmpty {
                                 Label(recipe.servingText, systemImage: "person.2")
@@ -46,34 +43,14 @@ struct RecipeDetailView: View {
                         .font(.caption)
                         .foregroundStyle(.secondary)
                     }
+                    .padding(.vertical, 4)
                 }
-                .padding(.vertical, 4)
             }
 
             Section("재료") {
                 if let ingredientGroup = recipe.sortedIngredientGroups.first {
                     ForEach(ingredientGroup.sortedIngredients) { ingredient in
-                        VStack(alignment: .leading, spacing: 4) {
-                            Text(ingredient.name)
-
-                            HStack(spacing: 6) {
-                                if let amountText = ingredient.amountText {
-                                    Text(amountText)
-                                }
-
-                                if let unit = ingredient.unit {
-                                    Text(unit)
-                                }
-
-                                if ingredient.amountText != nil || ingredient.unit != nil {
-                                    Text("·")
-                                }
-
-                                Text(ingredient.rawText)
-                            }
-                            .font(.caption)
-                            .foregroundStyle(.secondary)
-                        }
+                        IngredientLineView(ingredient: ingredient)
                     }
                 } else {
                     Text("저장된 재료 없음")
@@ -164,6 +141,10 @@ struct RecipeDetailView: View {
         }
     }
 
+    private var hasHeaderContent: Bool {
+        recipe.recipeDescription?.isEmpty == false || hasSummaryValues
+    }
+
     private var hasSummaryValues: Bool {
         !recipe.servingText.isEmpty
         || recipe.cookingTimeMinutes != nil
@@ -180,6 +161,55 @@ struct RecipeDetailView: View {
 
         draft.apply(to: recipe)
         try? modelContext.save()
+    }
+}
+
+private struct IngredientLineView: View {
+    let ingredient: RecipeIngredient
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 4) {
+            Text(ingredientDisplayText)
+
+            if shouldShowRawText {
+                Text(ingredient.rawText)
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
+            }
+        }
+        .padding(.vertical, 2)
+    }
+
+    private var ingredientDisplayText: AttributedString {
+        var text = AttributedString(ingredient.name)
+        text.font = .body.bold()
+
+        if !amountAndUnitText.isEmpty {
+            var amountText = AttributedString(" \(amountAndUnitText)")
+            amountText.font = .body
+            text.append(amountText)
+        }
+
+        return text
+    }
+
+    private var amountAndUnitText: String {
+        [ingredient.amountText, ingredient.unit]
+            .compactMap { value in
+                let trimmedValue = value?.trimmingCharacters(in: .whitespacesAndNewlines)
+                return trimmedValue?.isEmpty == false ? trimmedValue : nil
+            }
+            .joined()
+    }
+
+    private var shouldShowRawText: Bool {
+        normalized(ingredient.rawText) != normalized("\(ingredient.name)\(amountAndUnitText)")
+    }
+
+    private func normalized(_ text: String) -> String {
+        text
+            .replacingOccurrences(of: " ", with: "")
+            .trimmingCharacters(in: .whitespacesAndNewlines)
     }
 }
 
