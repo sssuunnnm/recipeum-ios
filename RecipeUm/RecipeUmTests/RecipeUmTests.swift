@@ -562,6 +562,36 @@ struct RecipeUmTests {
         #expect(savedRecipe.source?.titleOrMemo == "참고 레시피")
     }
 
+    @Test @MainActor func persistsFavoriteStateChanges() throws {
+        let schema = Schema([
+            Recipe.self,
+            IngredientGroup.self,
+            RecipeIngredient.self,
+            CookingStep.self,
+            RecipeSource.self,
+        ])
+        let configuration = ModelConfiguration(schema: schema, isStoredInMemoryOnly: true)
+        let container = try ModelContainer(for: schema, configurations: [configuration])
+        let recipe = Recipe(title: "비빔만두")
+
+        container.mainContext.insert(recipe)
+        try container.mainContext.save()
+
+        recipe.isFavorite = true
+        recipe.markUpdated()
+        try container.mainContext.save()
+
+        var savedRecipe = try #require(try container.mainContext.fetch(FetchDescriptor<Recipe>()).first)
+        #expect(savedRecipe.isFavorite)
+
+        savedRecipe.isFavorite = false
+        savedRecipe.markUpdated()
+        try container.mainContext.save()
+
+        savedRecipe = try #require(try container.mainContext.fetch(FetchDescriptor<Recipe>()).first)
+        #expect(!savedRecipe.isFavorite)
+    }
+
     @Test @MainActor func filtersRecipesByTitleSearchText() throws {
         let dataset = try makeSearchRecipeDataset([
             SearchRecipeFixture(title: "김치볶음밥", categoryName: "밥", ingredients: ["김치 100그램"]),
@@ -608,6 +638,24 @@ struct RecipeUmTests {
         #expect(mismatchedTitles.isEmpty)
     }
 
+    @Test @MainActor func filtersRecipesByFavoriteState() throws {
+        let dataset = try makeSearchRecipeDataset([
+            SearchRecipeFixture(title: "김치볶음밥", ingredients: ["김치 100그램"], isFavorite: true),
+            SearchRecipeFixture(title: "비빔만두", ingredients: ["만두 8개"]),
+            SearchRecipeFixture(title: "김치찌개", ingredients: ["김치 200그램"], isFavorite: true),
+        ])
+
+        let favoriteTitles = RecipeLibraryFilter(isFavoritesOnly: true)
+            .filteredRecipes(from: dataset.recipes)
+            .map(\.title)
+        let favoriteKimchiTitles = RecipeLibraryFilter(searchText: "김치", isFavoritesOnly: true)
+            .filteredRecipes(from: dataset.recipes)
+            .map(\.title)
+
+        #expect(favoriteTitles == ["김치볶음밥", "김치찌개"])
+        #expect(favoriteKimchiTitles == ["김치볶음밥", "김치찌개"])
+    }
+
     @Test @MainActor func exposesAvailableCategoryNames() throws {
         let dataset = try makeSearchRecipeDataset([
             SearchRecipeFixture(title: "김치볶음밥", categoryName: "밥", ingredients: ["김치 100그램"]),
@@ -633,6 +681,7 @@ struct RecipeUmTests {
         let title: String
         var categoryName: String?
         let ingredients: [String]
+        var isFavorite = false
     }
 
     private struct SearchRecipeDataset {
@@ -651,7 +700,11 @@ struct RecipeUmTests {
         let configuration = ModelConfiguration(schema: schema, isStoredInMemoryOnly: true)
         let container = try ModelContainer(for: schema, configurations: [configuration])
         let recipes = fixtures.map { fixture in
-            let recipe = Recipe(title: fixture.title, categoryName: fixture.categoryName)
+            let recipe = Recipe(
+                title: fixture.title,
+                isFavorite: fixture.isFavorite,
+                categoryName: fixture.categoryName
+            )
             let group = IngredientGroup(title: "기본 재료", sortOrder: 0)
             group.ingredients = fixture.ingredients.enumerated().map { index, rawText in
                 RecipeIngredient(

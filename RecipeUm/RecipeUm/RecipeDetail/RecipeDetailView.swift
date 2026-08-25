@@ -16,6 +16,7 @@ struct RecipeDetailView: View {
 
     @State private var isPresentingEditor = false
     @State private var isPresentingDeleteConfirmation = false
+    @State private var favoriteErrorMessage: String?
     @State private var deleteErrorMessage: String?
 
     var body: some View {
@@ -29,6 +30,10 @@ struct RecipeDetailView: View {
                         }
 
                         HStack(spacing: 8) {
+                            if recipe.isFavorite {
+                                Label("즐겨찾기", systemImage: "star.fill")
+                            }
+
                             if !recipe.servingText.isEmpty {
                                 Label(recipe.servingText, systemImage: "person.2")
                             }
@@ -112,6 +117,15 @@ struct RecipeDetailView: View {
             ToolbarItem(placement: .topBarTrailing) {
                 Menu {
                     Button {
+                        toggleFavorite()
+                    } label: {
+                        Label(
+                            recipe.isFavorite ? "즐겨찾기 해제" : "즐겨찾기",
+                            systemImage: recipe.isFavorite ? "star.slash" : "star"
+                        )
+                    }
+
+                    Button {
                         isPresentingEditor = true
                     } label: {
                         Label("수정", systemImage: "pencil")
@@ -151,6 +165,22 @@ struct RecipeDetailView: View {
         } message: {
             Text(deleteErrorMessage ?? "다시 시도해 주세요.")
         }
+        .alert("즐겨찾기 저장 실패", isPresented: isShowingFavoriteError) {
+            Button("확인", role: .cancel) {}
+        } message: {
+            Text(favoriteErrorMessage ?? "다시 시도해 주세요.")
+        }
+    }
+
+    private var isShowingFavoriteError: Binding<Bool> {
+        Binding(
+            get: { favoriteErrorMessage != nil },
+            set: { isPresented in
+                if !isPresented {
+                    favoriteErrorMessage = nil
+                }
+            }
+        )
     }
 
     private var isShowingDeleteError: Binding<Bool> {
@@ -162,6 +192,22 @@ struct RecipeDetailView: View {
                 }
             }
         )
+    }
+
+    private func toggleFavorite() {
+        let originalFavoriteState = recipe.isFavorite
+        let originalUpdatedAt = recipe.updatedAt
+
+        recipe.isFavorite.toggle()
+        recipe.markUpdated()
+
+        do {
+            try modelContext.save()
+        } catch {
+            recipe.isFavorite = originalFavoriteState
+            recipe.updatedAt = originalUpdatedAt
+            favoriteErrorMessage = error.localizedDescription
+        }
     }
 
     private func deleteRecipe() {
@@ -180,7 +226,8 @@ struct RecipeDetailView: View {
     }
 
     private var hasSummaryValues: Bool {
-        !recipe.servingText.isEmpty
+        recipe.isFavorite
+        || !recipe.servingText.isEmpty
         || recipe.cookingTimeMinutes != nil
         || recipe.categoryName?.isEmpty == false
     }

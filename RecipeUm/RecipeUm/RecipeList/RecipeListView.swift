@@ -14,11 +14,14 @@ struct RecipeListView: View {
     @State private var isPresentingNewRecipe = false
     @State private var searchText = ""
     @State private var selectedCategoryName: String?
+    @State private var isFavoritesOnly = false
+    @State private var favoriteErrorMessage: String?
 
     private var filter: RecipeLibraryFilter {
         RecipeLibraryFilter(
             searchText: searchText,
-            categoryName: selectedCategoryName
+            categoryName: selectedCategoryName,
+            isFavoritesOnly: isFavoritesOnly
         )
     }
 
@@ -39,17 +42,19 @@ struct RecipeListView: View {
 
                     Spacer()
 
+                    favoriteFilterButton
                     categoryFilterMenu
 
                     Button {
                         isPresentingNewRecipe = true
                     } label: {
                         Label("레시피 추가", systemImage: "plus")
+                            .labelStyle(.iconOnly)
                     }
                     .buttonStyle(.borderedProminent)
+                    .accessibilityLabel("레시피 추가")
                 }
                 .padding(.horizontal)
-                .padding(.top, 12)
 
                 if recipes.isEmpty {
                     ContentUnavailableView {
@@ -81,13 +86,24 @@ struct RecipeListView: View {
                                 } label: {
                                     RecipeRow(recipe: recipe)
                                 }
+                                .swipeActions(edge: .leading) {
+                                    Button {
+                                        toggleFavorite(recipe)
+                                    } label: {
+                                        Label(
+                                            recipe.isFavorite ? "즐겨찾기 해제" : "즐겨찾기",
+                                            systemImage: recipe.isFavorite ? "star.slash" : "star"
+                                        )
+                                    }
+                                    .tint(.yellow)
+                                }
                             }
                         }
                         .listStyle(.plain)
                     }
                 }
             }
-            .navigationBarTitleDisplayMode(.inline)
+            .toolbar(.hidden, for: .navigationBar)
             .searchable(text: $searchText, prompt: "레시피 또는 재료 검색")
             .sheet(isPresented: $isPresentingNewRecipe) {
                 RecipeEditorView(navigationTitle: "레시피 추가") { draft in
@@ -102,7 +118,35 @@ struct RecipeListView: View {
                     }
                 }
             }
+            .alert("즐겨찾기 저장 실패", isPresented: isShowingFavoriteError) {
+                Button("확인", role: .cancel) {}
+            } message: {
+                Text(favoriteErrorMessage ?? "다시 시도해 주세요.")
+            }
         }
+    }
+
+    private var isShowingFavoriteError: Binding<Bool> {
+        Binding(
+            get: { favoriteErrorMessage != nil },
+            set: { isPresented in
+                if !isPresented {
+                    favoriteErrorMessage = nil
+                }
+            }
+        )
+    }
+
+    private var favoriteFilterButton: some View {
+        Button {
+            isFavoritesOnly.toggle()
+        } label: {
+            Label("즐겨찾기만 보기", systemImage: isFavoritesOnly ? "star.fill" : "star")
+                .labelStyle(.iconOnly)
+        }
+        .buttonStyle(.bordered)
+        .tint(isFavoritesOnly ? .yellow : nil)
+        .accessibilityLabel(isFavoritesOnly ? "전체 레시피 보기" : "즐겨찾기만 보기")
     }
 
     @ViewBuilder
@@ -126,6 +170,22 @@ struct RecipeListView: View {
             .accessibilityLabel(selectedCategoryName.map { "\($0) 필터 적용 중" } ?? "카테고리 필터")
         }
     }
+
+    private func toggleFavorite(_ recipe: Recipe) {
+        let originalFavoriteState = recipe.isFavorite
+        let originalUpdatedAt = recipe.updatedAt
+
+        recipe.isFavorite.toggle()
+        recipe.markUpdated()
+
+        do {
+            try modelContext.save()
+        } catch {
+            recipe.isFavorite = originalFavoriteState
+            recipe.updatedAt = originalUpdatedAt
+            favoriteErrorMessage = error.localizedDescription
+        }
+    }
 }
 
 private struct RecipeRow: View {
@@ -136,6 +196,12 @@ private struct RecipeRow: View {
             HStack(alignment: .firstTextBaseline) {
                 Text(recipe.title)
                     .font(.headline)
+
+                if recipe.isFavorite {
+                    Image(systemName: "star.fill")
+                        .font(.caption)
+                        .foregroundStyle(.yellow)
+                }
 
                 Spacer()
 
