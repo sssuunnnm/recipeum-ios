@@ -49,9 +49,13 @@ Create the iOS app project.
 
 ### 3. Phase 1 Core Archive
 
-Implement the smallest useful local recipe archive.
+Status: complete.
+
+Implemented the smallest useful local recipe archive.
 
 #### PR 1 — Core Models And Ingredient Parser
+
+Status: merged.
 
 - SwiftData recipe domain models
 - ingredient group, ingredient, cooking step, and source metadata models
@@ -61,6 +65,8 @@ Implement the smallest useful local recipe archive.
 
 #### PR 2 — Ingredient Input And Review Flow
 
+Status: merged.
+
 - single-line natural-language ingredient input
 - multi-line ingredient paste
 - parsed result display
@@ -69,6 +75,8 @@ Implement the smallest useful local recipe archive.
 
 #### PR 3 — Recipe CRUD And Detail Fields
 
+Status: merged.
+
 - recipe list
 - create, read, update, and delete recipes
 - cooking steps
@@ -76,7 +84,37 @@ Implement the smallest useful local recipe archive.
 - source metadata
 - save and reopen flow
 
-### 4. Parser Tests And Edge Cases
+### 4. Phase 2 Library Experience
+
+Build the first useful browsing and retrieval layer on top of the local archive.
+
+UX refinement remains important, but the next priority is to add enough library
+functionality to reveal the real interaction patterns before spending a separate
+PR on polish.
+
+#### PR 1 — Search And Basic Library Filters
+
+- search recipes by title
+- search recipes by ingredient raw text or parsed ingredient name
+- empty search state
+- simple category filter using existing category metadata
+- tests for search/filter helpers when domain logic is extracted
+
+#### PR 2 — Favorites
+
+- mark and unmark recipes as favorites
+- show favorite state in list and detail
+- filter or browse favorite recipes
+- persistence tests for favorite state
+
+#### PR 3 — Category And Collection Basics
+
+- revisit MVP category options with real usage feedback
+- category browsing entry point
+- basic collection direction if categories alone are not enough
+- keep category behavior local-first and lightweight
+
+### 5. Parser Tests And Edge Cases
 
 Build confidence in the ingredient parser with focused tests.
 
@@ -90,12 +128,12 @@ Important early examples:
 - `소금 취향껏`
 - `대파 흰 부분 손가락 두 마디 정도`
 
-### 5. Post-PR3 UI Refinement
+### 6. UI Refinement
 
-Polish the Phase 1 archive after PR 3 has delivered the first usable CRUD flow.
-This section should not duplicate PR 3 scope. Move items here only when they are
-follow-up refinements that improve the implemented CRUD experience without
-changing the Phase 1 source-of-truth behavior in `SPEC.md`.
+Polish the archive after Phase 2 exposes the real list, search, favorites, and
+category workflows. This section should not duplicate feature scope. Move items
+here only when they are refinements that improve the implemented experience
+without changing source-of-truth behavior in `SPEC.md`.
 
 - basic empty states
 - list sorting and grouping refinements

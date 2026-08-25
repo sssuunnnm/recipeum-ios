@@ -1,38 +1,65 @@
 # RecipeUm
 
-RecipeUm is a local-first iPhone app for preserving recipes as a personal archive.
-
 좋아하는 레시피를 나만의 것으로.
 
-## Product Direction
+RecipeUm is a local-first iPhone app for preserving recipes as a personal archive.
+It saves the recipe itself, not just the original link.
 
-RecipeUm saves the recipe itself, not just the link.
+## Overview
 
-Recipes discovered on YouTube, blogs, or the web should remain useful even if the original source becomes unavailable. The MVP focuses on manual entry, natural-language ingredient input, multi-line ingredient paste, local persistence, and durable export.
+Recipes discovered on YouTube, blogs, or the web can disappear, become private,
+or change over time. RecipeUm is built around the idea that a saved recipe should
+remain useful even when its original source is no longer available.
 
-## MVP Focus
+The current app focuses on manual entry, natural-language ingredient input,
+multi-line paste, local persistence, and editable recipe detail fields.
 
-- Personal recipe archive
-- SwiftUI iPhone app
-- SwiftData local persistence
+## Current Features
+
+- Local recipe list
+- Create, read, update, and delete recipes
 - Natural-language ingredient input
 - Multi-line ingredient paste
-- Reviewable ingredient parsing
-- Cooking steps and personal notes
-- Source URL as metadata
-- Image and PDF export
+- Basic Korean ingredient parsing
+- Ingredient raw text preservation
+- Ingredient groups using `[group name]` headers
+- Cooking steps
+- Personal notes
+- Source metadata
+- Category selection
+- Local persistence with SwiftData
+- Unit tests for parser, model ordering, save/reopen, and draft conversion flows
 
-## Not In MVP
+## Tech Stack
 
-- User accounts
-- Custom backend
-- Social features
-- Public recipe sharing
-- AI-based full recipe extraction
-- OCR extraction
-- Automatic serving conversion
+| Area | Technology |
+| --- | --- |
+| Platform | iOS |
+| UI | SwiftUI |
+| Persistence | SwiftData |
+| Language | Swift |
+| Tests | Swift Testing, XCTest project setup |
+| Minimum iOS | iOS 17.0 |
 
-## Repository Documents
+## Project Structure
+
+```text
+RecipeUm/
+├── RecipeUm.xcodeproj
+├── RecipeUm/
+│   ├── Models/
+│   ├── Parsing/
+│   ├── IngredientInput/
+│   ├── RecipeList/
+│   ├── RecipeEditing/
+│   ├── RecipeDetail/
+│   ├── ContentView.swift
+│   └── RecipeUmApp.swift
+├── RecipeUmTests/
+└── RecipeUmUITests/
+```
+
+Root documents:
 
 - `SPEC.md` — product source of truth
 - `ROADMAP.md` — current development order
@@ -41,19 +68,28 @@ Recipes discovered on YouTube, blogs, or the web should remain useful even if th
 - `GIT_WORKFLOW.md` — branch, commit, and PR rules
 - `AI_WORKFLOW.md` — AI-assisted development workflow
 
-## Project Structure
-
-- `RecipeUm/RecipeUm.xcodeproj` — Xcode project
-- `RecipeUm/RecipeUm` — iOS app source
-- `RecipeUm/RecipeUmTests` — unit and Swift Testing target
-- `RecipeUm/RecipeUmUITests` — UI test target
-- root `*.md` files — product, workflow, and repository planning documents
-
 ## Development Status
 
-The repository has initial planning documents and a generated SwiftUI / SwiftData iOS project.
+Phase 1 Core Archive is complete:
 
-The next major step is implementing the Phase 1 core archive.
+- PR 1: core models and ingredient parser
+- PR 2: ingredient input and review flow
+- PR 3: recipe CRUD and detail fields
+
+The next development area is Phase 2 Library Experience: search, favorites, and
+basic category or collection browsing.
+
+## Not In Scope Yet
+
+- User accounts
+- Custom backend
+- CloudKit sync
+- Social features
+- Public recipe sharing
+- AI-based full recipe extraction
+- OCR extraction
+- Automatic serving conversion
+- Image/PDF export
 
 ## License
 

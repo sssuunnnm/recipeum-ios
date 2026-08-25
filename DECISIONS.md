@@ -290,3 +290,27 @@ Set `IPHONEOS_DEPLOYMENT_TARGET` to `17.0` for the initial app and test targets.
 ### Consequence
 
 The app keeps SwiftData support while avoiding an unnecessarily narrow device support window.
+
+---
+
+## D016 — Build Phase 2 library features before a dedicated UI polish phase
+
+### Context
+
+After Phase 1, RecipeUm has a usable local archive: recipe CRUD, ingredient
+input, parsing, cooking steps, notes, and source metadata.
+
+There are visible UI refinements to make, but search, favorites, and category
+browsing will change how the main list and detail screens should behave.
+
+### Decision
+
+Move directly from Phase 1 into Phase 2 library features.
+
+Defer a dedicated UI refinement phase until the app has search, favorites, and
+basic category or collection workflows.
+
+### Consequence
+
+UI work can be based on more realistic usage patterns instead of polishing the
+initial CRUD screens too early.
