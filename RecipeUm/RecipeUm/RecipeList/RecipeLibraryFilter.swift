@@ -10,13 +10,18 @@ import Foundation
 struct RecipeLibraryFilter: Equatable {
     var searchText: String = ""
     var categoryName: String?
+    var isFavoritesOnly = false
 
     func filteredRecipes(from recipes: [Recipe]) -> [Recipe] {
         recipes.filter(matches)
     }
 
     func matches(_ recipe: Recipe) -> Bool {
-        matchesCategory(recipe) && matchesSearchText(recipe)
+        matchesFavoriteState(recipe) && matchesCategory(recipe) && matchesSearchText(recipe)
+    }
+
+    private func matchesFavoriteState(_ recipe: Recipe) -> Bool {
+        !isFavoritesOnly || recipe.isFavorite
     }
 
     private func matchesCategory(_ recipe: Recipe) -> Bool {
