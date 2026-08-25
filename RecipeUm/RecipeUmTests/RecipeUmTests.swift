@@ -447,6 +447,63 @@ struct RecipeUmTests {
         #expect(reopenedDraft.sourceType == .personal)
         #expect(reopenedDraft.sourceTitleOrMemo == "집에서 적어둔 버전")
     }
+
+    @Test @MainActor func appliesDraftChangesToExistingRecipe() throws {
+        let schema = Schema([
+            Recipe.self,
+            IngredientGroup.self,
+            RecipeIngredient.self,
+            CookingStep.self,
+            RecipeSource.self,
+        ])
+        let configuration = ModelConfiguration(schema: schema, isStoredInMemoryOnly: true)
+        let container = try ModelContainer(for: schema, configurations: [configuration])
+        let recipe = RecipeFormDraft(
+            title: "된장찌개",
+            ingredientText: "두부 1모",
+            cookingStepText: "끓인다.",
+            sourceType: .personal,
+            sourceTitleOrMemo: "기본 버전"
+        ).makeRecipe()
+
+        container.mainContext.insert(recipe)
+        try container.mainContext.save()
+
+        let updateDraft = RecipeFormDraft(
+            title: "차돌 된장찌개",
+            servingText: "2인분",
+            cookingTimeMinutesText: "25",
+            personalNotes: "차돌은 마지막에 넣는다.",
+            ingredientText: """
+            차돌박이 150그램
+            두부 1모
+            """,
+            cookingStepText: """
+            육수를 끓인다.
+            재료를 넣는다.
+            """,
+            sourceType: .blog,
+            sourceURLString: "https://example.com/doenjang",
+            sourceTitleOrMemo: "참고 레시피"
+        )
+
+        updateDraft.apply(to: recipe)
+        try container.mainContext.save()
+
+        let savedRecipe = try #require(try container.mainContext.fetch(FetchDescriptor<Recipe>()).first)
+        let ingredientGroup = try #require(savedRecipe.sortedIngredientGroups.first)
+
+        #expect(savedRecipe.title == "차돌 된장찌개")
+        #expect(savedRecipe.servingText == "2인분")
+        #expect(savedRecipe.cookingTimeMinutes == 25)
+        #expect(savedRecipe.personalNotes == "차돌은 마지막에 넣는다.")
+        #expect(ingredientGroup.sortedIngredients.map(\.rawText) == ["차돌박이 150그램", "두부 1모"])
+        #expect(ingredientGroup.sortedIngredients.first?.unit == "g")
+        #expect(savedRecipe.sortedCookingSteps.map(\.instruction) == ["육수를 끓인다.", "재료를 넣는다."])
+        #expect(savedRecipe.source?.type == .blog)
+        #expect(savedRecipe.source?.urlString == "https://example.com/doenjang")
+        #expect(savedRecipe.source?.titleOrMemo == "참고 레시피")
+    }
 }
 
 private extension RecipeFormDraft {

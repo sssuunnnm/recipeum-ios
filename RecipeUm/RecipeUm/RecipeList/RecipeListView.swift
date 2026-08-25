@@ -26,7 +26,7 @@ struct RecipeListView: View {
                     List {
                         ForEach(recipes) { recipe in
                             NavigationLink {
-                                RecipeSummaryView(recipe: recipe)
+                                RecipeDetailView(recipe: recipe)
                             } label: {
                                 RecipeRow(recipe: recipe)
                             }
@@ -90,34 +90,6 @@ private struct RecipeRow: View {
             }
         }
         .padding(.vertical, 4)
-    }
-}
-
-private struct RecipeSummaryView: View {
-    let recipe: Recipe
-
-    var body: some View {
-        List {
-            Section("기본 정보") {
-                LabeledContent("이름", value: recipe.title)
-
-                if !recipe.servingText.isEmpty {
-                    LabeledContent("분량", value: recipe.servingText)
-                }
-
-                if let cookingTimeMinutes = recipe.cookingTimeMinutes {
-                    LabeledContent("조리 시간", value: "\(cookingTimeMinutes)분")
-                }
-            }
-
-            if !recipe.personalNotes.isEmpty {
-                Section("내 메모") {
-                    Text(recipe.personalNotes)
-                }
-            }
-        }
-        .navigationTitle(recipe.title)
-        .navigationBarTitleDisplayMode(.inline)
     }
 }
 

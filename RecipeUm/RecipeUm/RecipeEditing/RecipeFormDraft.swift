@@ -65,6 +65,23 @@ struct RecipeFormDraft: Equatable {
         return recipe
     }
 
+    func apply(
+        to recipe: Recipe,
+        at date: Date = Date(),
+        parser: IngredientParser = IngredientParser()
+    ) {
+        recipe.title = title.trimmed
+        recipe.recipeDescription = recipeDescription.trimmedNilIfEmpty
+        recipe.servingText = servingText.trimmed
+        recipe.cookingTimeMinutes = cookingTimeMinutes
+        recipe.personalNotes = personalNotes.trimmed
+        recipe.categoryName = categoryName.trimmedNilIfEmpty
+        recipe.ingredientGroups = makeIngredientGroups(parser: parser)
+        recipe.cookingSteps = makeCookingSteps()
+        recipe.source = makeSource()
+        recipe.markUpdated(at: date)
+    }
+
     private var cookingTimeMinutes: Int? {
         Int(cookingTimeMinutesText.trimmed)
     }
