@@ -677,6 +677,39 @@ struct RecipeUmTests {
         #expect(dataset.recipes.availableCategoryNames() == ["Dessert", "Dinner"])
     }
 
+    @Test func providesDefaultRecipeCategoryOptions() {
+        #expect(RecipeCategoryCatalog.editorOptions(including: "") == [
+            "",
+            "한식",
+            "양식",
+            "일식",
+            "중식",
+            "디저트",
+            "기타",
+        ])
+    }
+
+    @Test func preservesCurrentCustomCategoryOption() {
+        let options = RecipeCategoryCatalog.editorOptions(including: "밥")
+
+        #expect(options.contains("밥"))
+        #expect(options.last == "밥")
+    }
+
+    @Test @MainActor func summarizesRecipeCategoriesWithCounts() throws {
+        let dataset = try makeSearchRecipeDataset([
+            SearchRecipeFixture(title: "브라우니", categoryName: "Dessert", ingredients: ["초콜릿 100그램"]),
+            SearchRecipeFixture(title: "쿠키", categoryName: "dessert", ingredients: ["버터 100그램"]),
+            SearchRecipeFixture(title: "비빔만두", categoryName: "한식", ingredients: ["만두 8개"]),
+            SearchRecipeFixture(title: "무카테고리", ingredients: ["물 1컵"]),
+        ])
+
+        #expect(RecipeCategoryCatalog.summaries(for: dataset.recipes) == [
+            RecipeCategorySummary(name: "Dessert", recipeCount: 2),
+            RecipeCategorySummary(name: "한식", recipeCount: 1),
+        ])
+    }
+
     private struct SearchRecipeFixture {
         let title: String
         var categoryName: String?

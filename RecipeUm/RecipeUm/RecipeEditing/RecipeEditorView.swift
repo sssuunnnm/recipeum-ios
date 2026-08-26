@@ -10,19 +10,6 @@ import SwiftUI
 struct RecipeEditorView: View {
     @Environment(\.dismiss) private var dismiss
 
-    private static let categoryOptions = [
-        "",
-        "밥",
-        "면",
-        "국/찌개",
-        "반찬",
-        "고기",
-        "해산물",
-        "디저트",
-        "음료",
-        "기타",
-    ]
-
     let navigationTitle: String
     let onSave: (RecipeFormDraft) throws -> Void
 
@@ -34,15 +21,7 @@ struct RecipeEditorView: View {
     @State private var saveErrorMessage: String?
 
     private var categoryOptions: [String] {
-        let currentCategoryName = draft.categoryName.trimmingCharacters(in: .whitespacesAndNewlines)
-
-        guard !currentCategoryName.isEmpty,
-              !Self.categoryOptions.contains(currentCategoryName)
-        else {
-            return Self.categoryOptions
-        }
-
-        return Self.categoryOptions + [currentCategoryName]
+        RecipeCategoryCatalog.editorOptions(including: draft.categoryName)
     }
 
     init(
