@@ -29,10 +29,6 @@ struct RecipeListView: View {
         filter.filteredRecipes(from: recipes)
     }
 
-    private var availableCategoryNames: [String] {
-        recipes.availableCategoryNames()
-    }
-
     private var categorySummaries: [RecipeCategorySummary] {
         RecipeCategoryCatalog.summaries(for: recipes)
     }
@@ -47,7 +43,6 @@ struct RecipeListView: View {
                     Spacer()
 
                     favoriteFilterButton
-                    categoryFilterMenu
 
                     Button {
                         isPresentingNewRecipe = true
@@ -199,28 +194,6 @@ struct RecipeListView: View {
         .buttonStyle(.bordered)
         .tint(isFavoritesOnly ? .yellow : nil)
         .accessibilityLabel(isFavoritesOnly ? "전체 레시피 보기" : "즐겨찾기만 보기")
-    }
-
-    @ViewBuilder
-    private var categoryFilterMenu: some View {
-        if !availableCategoryNames.isEmpty || selectedCategoryName != nil {
-            Menu {
-                Button("전체") {
-                    selectedCategoryName = nil
-                }
-
-                ForEach(availableCategoryNames, id: \.self) { categoryName in
-                    Button(categoryName) {
-                        selectedCategoryName = categoryName
-                    }
-                }
-            } label: {
-                Label(selectedCategoryName ?? "카테고리 필터", systemImage: "line.3.horizontal.decrease.circle")
-                    .labelStyle(.iconOnly)
-            }
-            .buttonStyle(.bordered)
-            .accessibilityLabel(selectedCategoryName.map { "\($0) 필터 적용 중" } ?? "카테고리 필터")
-        }
     }
 
     private func toggleFavorite(_ recipe: Recipe) {
