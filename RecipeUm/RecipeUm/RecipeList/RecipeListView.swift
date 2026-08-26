@@ -33,6 +33,10 @@ struct RecipeListView: View {
         recipes.availableCategoryNames()
     }
 
+    private var categorySummaries: [RecipeCategorySummary] {
+        RecipeCategoryCatalog.summaries(for: recipes)
+    }
+
     var body: some View {
         NavigationStack {
             VStack(alignment: .leading, spacing: 16) {
@@ -55,6 +59,8 @@ struct RecipeListView: View {
                     .accessibilityLabel("레시피 추가")
                 }
                 .padding(.horizontal)
+
+                categoryBrowser
 
                 if recipes.isEmpty {
                     ContentUnavailableView {
@@ -124,6 +130,52 @@ struct RecipeListView: View {
                 Text(favoriteErrorMessage ?? "다시 시도해 주세요.")
             }
         }
+    }
+
+    @ViewBuilder
+    private var categoryBrowser: some View {
+        if !categorySummaries.isEmpty {
+            ScrollView(.horizontal, showsIndicators: false) {
+                HStack(spacing: 8) {
+                    categoryChip(title: "전체", count: recipes.count, isSelected: selectedCategoryName == nil) {
+                        selectedCategoryName = nil
+                    }
+
+                    ForEach(categorySummaries) { summary in
+                        categoryChip(
+                            title: summary.name,
+                            count: summary.recipeCount,
+                            isSelected: selectedCategoryName == summary.name
+                        ) {
+                            selectedCategoryName = summary.name
+                        }
+                    }
+                }
+                .padding(.horizontal)
+            }
+        }
+    }
+
+    private func categoryChip(
+        title: String,
+        count: Int,
+        isSelected: Bool,
+        action: @escaping () -> Void
+    ) -> some View {
+        Button(action: action) {
+            HStack(spacing: 6) {
+                Text(title)
+                Text("\(count)")
+                    .font(.caption.weight(.semibold))
+                    .foregroundStyle(isSelected ? .white.opacity(0.8) : .secondary)
+            }
+            .font(.subheadline.weight(.semibold))
+            .padding(.horizontal, 12)
+            .padding(.vertical, 8)
+            .foregroundStyle(isSelected ? .white : .primary)
+            .background(isSelected ? Color.accentColor : Color(.secondarySystemBackground), in: Capsule())
+        }
+        .buttonStyle(.plain)
     }
 
     private var isShowingFavoriteError: Binding<Bool> {
