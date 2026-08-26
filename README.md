@@ -29,8 +29,9 @@ multi-line paste, local persistence, and editable recipe detail fields.
 - Category selection
 - Recipe search by title or ingredient
 - Basic category filtering
+- Favorites
 - Local persistence with SwiftData
-- Unit tests for parser, model ordering, save/reopen, draft conversion, and library filtering flows
+- Unit tests for parser, model ordering, save/reopen, draft conversion, library filtering, and favorites flows
 
 ## Tech Stack
 
@@ -81,7 +82,8 @@ Phase 1 Core Archive is complete:
 Phase 2 Library Experience is in progress:
 
 - PR 1: search and basic library filters
-- Next: PR 2 favorites
+- PR 2: favorites
+- Next: PR 3 category and collection basics
 
 ## Not In Scope Yet
 

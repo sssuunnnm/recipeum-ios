@@ -104,7 +104,7 @@ Status: complete.
 
 #### PR 2 — Favorites
 
-Status: next.
+Status: complete.
 
 - mark and unmark recipes as favorites
 - show favorite state in list and detail
@@ -112,6 +112,8 @@ Status: next.
 - persistence tests for favorite state
 
 #### PR 3 — Category And Collection Basics
+
+Status: next.
 
 - revisit MVP category options with real usage feedback
 - category browsing entry point
