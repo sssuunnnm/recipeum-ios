@@ -39,6 +39,7 @@ struct RecipeListView: View {
                 HStack(alignment: .center) {
                     Text("RecipeUm")
                         .font(.largeTitle.bold())
+                        .foregroundStyle(RecipeListTheme.espresso)
 
                     Spacer()
 
@@ -51,9 +52,12 @@ struct RecipeListView: View {
                             .labelStyle(.iconOnly)
                     }
                     .buttonStyle(.borderedProminent)
+                    .tint(RecipeListTheme.sage)
                     .accessibilityLabel("레시피 추가")
                 }
-                .padding(.horizontal)
+                .padding(.horizontal, 20)
+
+                searchField
 
                 categoryBrowser
 
@@ -87,6 +91,7 @@ struct RecipeListView: View {
                                 } label: {
                                     RecipeRow(recipe: recipe)
                                 }
+                                .listRowBackground(Color.clear)
                                 .swipeActions(edge: .leading) {
                                     Button {
                                         toggleFavorite(recipe)
@@ -101,11 +106,12 @@ struct RecipeListView: View {
                             }
                         }
                         .listStyle(.plain)
+                        .scrollContentBackground(.hidden)
                     }
                 }
             }
+            .background(RecipeListTheme.background.ignoresSafeArea())
             .toolbar(.hidden, for: .navigationBar)
-            .searchable(text: $searchText, prompt: "레시피 또는 재료 검색")
             .sheet(isPresented: $isPresentingNewRecipe) {
                 RecipeEditorView(navigationTitle: "레시피 추가") { draft in
                     let recipe = draft.makeRecipe()
@@ -125,6 +131,34 @@ struct RecipeListView: View {
                 Text(favoriteErrorMessage ?? "다시 시도해 주세요.")
             }
         }
+    }
+
+    private var searchField: some View {
+        HStack(spacing: 10) {
+            Image(systemName: "magnifyingglass")
+                .foregroundStyle(RecipeListTheme.sage)
+
+            TextField("레시피 또는 재료 검색", text: $searchText)
+                .textInputAutocapitalization(.never)
+                .autocorrectionDisabled()
+
+            if !searchText.isEmpty {
+                Button {
+                    searchText = ""
+                } label: {
+                    Image(systemName: "xmark.circle.fill")
+                        .foregroundStyle(.secondary)
+                }
+                .buttonStyle(.plain)
+                .accessibilityLabel("검색어 지우기")
+            }
+        }
+        .font(.body)
+        .padding(.horizontal, 16)
+        .padding(.vertical, 12)
+        .background(.white, in: Capsule())
+        .shadow(color: .black.opacity(0.06), radius: 14, y: 6)
+        .padding(.horizontal, 20)
     }
 
     @ViewBuilder
@@ -167,8 +201,12 @@ struct RecipeListView: View {
             .font(.subheadline.weight(.semibold))
             .padding(.horizontal, 12)
             .padding(.vertical, 8)
-            .foregroundStyle(isSelected ? .white : .primary)
-            .background(isSelected ? Color.accentColor : Color(.secondarySystemBackground), in: Capsule())
+            .foregroundStyle(isSelected ? .white : RecipeListTheme.espresso)
+            .background(isSelected ? RecipeListTheme.sage : .white, in: Capsule())
+            .overlay(
+                Capsule()
+                    .stroke(RecipeListTheme.sage.opacity(isSelected ? 0 : 0.18), lineWidth: 1)
+            )
         }
         .buttonStyle(.plain)
     }
@@ -192,7 +230,7 @@ struct RecipeListView: View {
                 .labelStyle(.iconOnly)
         }
         .buttonStyle(.bordered)
-        .tint(isFavoritesOnly ? .yellow : nil)
+        .tint(isFavoritesOnly ? RecipeListTheme.apricot : RecipeListTheme.sage)
         .accessibilityLabel(isFavoritesOnly ? "전체 레시피 보기" : "즐겨찾기만 보기")
     }
 
@@ -225,7 +263,7 @@ private struct RecipeRow: View {
                 if recipe.isFavorite {
                     Image(systemName: "star.fill")
                         .font(.caption)
-                        .foregroundStyle(.yellow)
+                        .foregroundStyle(RecipeListTheme.terracotta)
                 }
 
                 Spacer()
@@ -233,15 +271,24 @@ private struct RecipeRow: View {
                 if let categoryName = recipe.categoryName, !categoryName.isEmpty {
                     Text(categoryName)
                         .font(.caption)
-                        .foregroundStyle(.secondary)
+                        .foregroundStyle(RecipeListTheme.sage)
                         .padding(.horizontal, 8)
                         .padding(.vertical, 4)
-                        .background(.thinMaterial, in: Capsule())
+                        .background(RecipeListTheme.sage.opacity(0.12), in: Capsule())
                 }
             }
         }
         .padding(.vertical, 4)
     }
+}
+
+private enum RecipeListTheme {
+    static let sage = Color(red: 0.44, green: 0.53, blue: 0.42)
+    static let terracotta = Color(red: 0.73, green: 0.39, blue: 0.28)
+    static let apricot = Color(red: 0.91, green: 0.59, blue: 0.34)
+    static let cream = Color(red: 0.97, green: 0.95, blue: 0.92)
+    static let espresso = Color(red: 0.32, green: 0.24, blue: 0.21)
+    static let background = cream
 }
 
 #Preview {
