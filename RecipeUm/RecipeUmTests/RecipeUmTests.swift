@@ -592,6 +592,36 @@ struct RecipeUmTests {
         #expect(!savedRecipe.isFavorite)
     }
 
+    @Test @MainActor func persistsCategoryMetadataChanges() throws {
+        let schema = Schema([
+            Recipe.self,
+            IngredientGroup.self,
+            RecipeIngredient.self,
+            CookingStep.self,
+            RecipeSource.self,
+        ])
+        let configuration = ModelConfiguration(schema: schema, isStoredInMemoryOnly: true)
+        let container = try ModelContainer(for: schema, configurations: [configuration])
+        let recipe = Recipe(title: "타코야끼", categoryName: "기타")
+
+        container.mainContext.insert(recipe)
+        try container.mainContext.save()
+
+        recipe.categoryName = "일식"
+        recipe.markUpdated()
+        try container.mainContext.save()
+
+        var savedRecipe = try #require(try container.mainContext.fetch(FetchDescriptor<Recipe>()).first)
+        #expect(savedRecipe.categoryName == "일식")
+
+        savedRecipe.categoryName = nil
+        savedRecipe.markUpdated()
+        try container.mainContext.save()
+
+        savedRecipe = try #require(try container.mainContext.fetch(FetchDescriptor<Recipe>()).first)
+        #expect(savedRecipe.categoryName == nil)
+    }
+
     @Test @MainActor func filtersRecipesByTitleSearchText() throws {
         let dataset = try makeSearchRecipeDataset([
             SearchRecipeFixture(title: "김치볶음밥", categoryName: "밥", ingredients: ["김치 100그램"]),
