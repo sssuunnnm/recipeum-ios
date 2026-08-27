@@ -95,6 +95,8 @@ struct RecipeEditorView: View {
                     }
                 }
             }
+            .scrollContentBackground(.hidden)
+            .background(RecipeTheme.background)
             .navigationTitle(navigationTitle)
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
@@ -108,6 +110,7 @@ struct RecipeEditorView: View {
                     Button("저장") {
                         save()
                     }
+                    .tint(RecipeTheme.sage)
                     .disabled(!draft.canSave)
                 }
             }

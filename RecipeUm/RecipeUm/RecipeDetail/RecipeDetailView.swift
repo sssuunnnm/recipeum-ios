@@ -108,6 +108,8 @@ struct RecipeDetailView: View {
                 }
             }
         }
+        .scrollContentBackground(.hidden)
+        .background(RecipeTheme.background)
         .navigationTitle(recipe.title)
         .navigationBarTitleDisplayMode(.inline)
         .toolbar {
@@ -222,6 +224,7 @@ struct RecipeDetailView: View {
         } label: {
             Label(recipe.categoryName?.isEmpty == false ? recipe.categoryName ?? "" : "카테고리 없음", systemImage: "tag")
         }
+        .tint(RecipeTheme.sage)
     }
 
     private func isSelectedCategory(_ categoryName: String) -> Bool {
