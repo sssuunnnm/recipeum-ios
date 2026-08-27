@@ -314,3 +314,37 @@ basic category or collection workflows.
 
 UI work can be based on more realistic usage patterns instead of polishing the
 initial CRUD screens too early.
+
+---
+
+## D017 — Keep Phase 2 categories lightweight
+
+### Context
+
+RecipeUm needs a simple way to browse a personal recipe archive, but the MVP
+does not yet have enough real usage data to justify a full collection system.
+
+Categories and collections can overlap:
+
+- cuisine or style: 한식, 양식, 일식, 중식, 디저트
+- personal grouping: 자취 요리, 엄마 레시피, 손님용, 자주 만드는 요리
+- dish type: 밥, 면, 국/찌개, 반찬
+
+Adding all of these as separate structured systems now would make recipe entry
+and browsing heavier before the product has proven which grouping users need.
+
+### Decision
+
+Use a lightweight single category field for Phase 2.
+
+Default category options should stay small and broad. Existing custom category
+values remain preserved and selectable when editing saved recipes.
+
+Do not add a separate collection model in Phase 2.
+
+### Consequence
+
+The library can support basic category browsing without over-designing taxonomy.
+
+Collections can be revisited later after real recipes reveal whether categories
+alone are not enough.

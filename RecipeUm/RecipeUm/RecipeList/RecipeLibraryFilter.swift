@@ -54,14 +54,9 @@ struct RecipeLibraryFilter: Equatable {
 
 extension Sequence where Element == Recipe {
     func availableCategoryNames() -> [String] {
-        var seenCategoryKeys = Set<String>()
-        let categoryNames = compactMap { recipe in
-            recipe.categoryName?.trimmingCharacters(in: .whitespacesAndNewlines)
-        }
-        .filter { !$0.isEmpty }
-        .filter { seenCategoryKeys.insert($0.normalizedForLibrarySearch).inserted }
-
-        return categoryNames.sorted()
+        RecipeCategoryCatalog
+            .summaries(for: Array(self))
+            .map(\.name)
     }
 }
 

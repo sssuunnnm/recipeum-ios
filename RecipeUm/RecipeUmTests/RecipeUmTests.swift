@@ -592,6 +592,36 @@ struct RecipeUmTests {
         #expect(!savedRecipe.isFavorite)
     }
 
+    @Test @MainActor func persistsCategoryMetadataChanges() throws {
+        let schema = Schema([
+            Recipe.self,
+            IngredientGroup.self,
+            RecipeIngredient.self,
+            CookingStep.self,
+            RecipeSource.self,
+        ])
+        let configuration = ModelConfiguration(schema: schema, isStoredInMemoryOnly: true)
+        let container = try ModelContainer(for: schema, configurations: [configuration])
+        let recipe = Recipe(title: "타코야끼", categoryName: "기타")
+
+        container.mainContext.insert(recipe)
+        try container.mainContext.save()
+
+        recipe.categoryName = "일식"
+        recipe.markUpdated()
+        try container.mainContext.save()
+
+        var savedRecipe = try #require(try container.mainContext.fetch(FetchDescriptor<Recipe>()).first)
+        #expect(savedRecipe.categoryName == "일식")
+
+        savedRecipe.categoryName = nil
+        savedRecipe.markUpdated()
+        try container.mainContext.save()
+
+        savedRecipe = try #require(try container.mainContext.fetch(FetchDescriptor<Recipe>()).first)
+        #expect(savedRecipe.categoryName == nil)
+    }
+
     @Test @MainActor func filtersRecipesByTitleSearchText() throws {
         let dataset = try makeSearchRecipeDataset([
             SearchRecipeFixture(title: "김치볶음밥", categoryName: "밥", ingredients: ["김치 100그램"]),
@@ -675,6 +705,50 @@ struct RecipeUmTests {
         ])
 
         #expect(dataset.recipes.availableCategoryNames() == ["Dessert", "Dinner"])
+    }
+
+    @Test func providesDefaultRecipeCategoryOptions() {
+        #expect(RecipeCategoryCatalog.editorOptions(including: "") == [
+            "",
+            "한식",
+            "양식",
+            "일식",
+            "중식",
+            "디저트",
+            "기타",
+        ])
+    }
+
+    @Test func preservesCurrentCustomCategoryOption() {
+        let options = RecipeCategoryCatalog.editorOptions(including: "밥")
+
+        #expect(options.contains("밥"))
+        #expect(options.last == "밥")
+    }
+
+    @Test @MainActor func summarizesRecipeCategoriesWithCounts() throws {
+        let dataset = try makeSearchRecipeDataset([
+            SearchRecipeFixture(title: "브라우니", categoryName: "Dessert", ingredients: ["초콜릿 100그램"]),
+            SearchRecipeFixture(title: "쿠키", categoryName: "dessert", ingredients: ["버터 100그램"]),
+            SearchRecipeFixture(title: "비빔만두", categoryName: "한식", ingredients: ["만두 8개"]),
+            SearchRecipeFixture(title: "무카테고리", ingredients: ["물 1컵"]),
+        ])
+
+        #expect(RecipeCategoryCatalog.summaries(for: dataset.recipes) == [
+            RecipeCategorySummary(name: "Dessert", recipeCount: 2),
+            RecipeCategorySummary(name: "한식", recipeCount: 1),
+        ])
+    }
+
+    @Test func checksSelectedCategoryAgainstCurrentSummaries() {
+        let summaries = [
+            RecipeCategorySummary(name: "Dessert", recipeCount: 2),
+            RecipeCategorySummary(name: "한식", recipeCount: 1),
+        ]
+
+        #expect(RecipeCategoryCatalog.contains(nil, in: summaries))
+        #expect(RecipeCategoryCatalog.contains("dessert", in: summaries))
+        #expect(!RecipeCategoryCatalog.contains("분식", in: summaries))
     }
 
     private struct SearchRecipeFixture {

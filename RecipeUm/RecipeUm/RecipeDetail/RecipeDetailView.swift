@@ -17,40 +17,37 @@ struct RecipeDetailView: View {
     @State private var isPresentingEditor = false
     @State private var isPresentingDeleteConfirmation = false
     @State private var favoriteErrorMessage: String?
+    @State private var categoryErrorMessage: String?
     @State private var deleteErrorMessage: String?
 
     var body: some View {
         List {
-            if hasHeaderContent {
-                Section {
-                    VStack(alignment: .leading, spacing: 12) {
-                        if let recipeDescription = recipe.recipeDescription, !recipeDescription.isEmpty {
-                            Text(recipeDescription)
-                                .foregroundStyle(.secondary)
-                        }
-
-                        HStack(spacing: 8) {
-                            if recipe.isFavorite {
-                                Label("즐겨찾기", systemImage: "star.fill")
-                            }
-
-                            if !recipe.servingText.isEmpty {
-                                Label(recipe.servingText, systemImage: "person.2")
-                            }
-
-                            if let cookingTimeMinutes = recipe.cookingTimeMinutes {
-                                Label("\(cookingTimeMinutes)분", systemImage: "clock")
-                            }
-
-                            if let categoryName = recipe.categoryName, !categoryName.isEmpty {
-                                Label(categoryName, systemImage: "tag")
-                            }
-                        }
-                        .font(.caption)
-                        .foregroundStyle(.secondary)
+            Section {
+                VStack(alignment: .leading, spacing: 12) {
+                    if let recipeDescription = recipe.recipeDescription, !recipeDescription.isEmpty {
+                        Text(recipeDescription)
+                            .foregroundStyle(.secondary)
                     }
-                    .padding(.vertical, 4)
+
+                    HStack(spacing: 8) {
+                        if recipe.isFavorite {
+                            Label("즐겨찾기", systemImage: "star.fill")
+                        }
+
+                        if !recipe.servingText.isEmpty {
+                            Label(recipe.servingText, systemImage: "person.2")
+                        }
+
+                        if let cookingTimeMinutes = recipe.cookingTimeMinutes {
+                            Label("\(cookingTimeMinutes)분", systemImage: "clock")
+                        }
+
+                        categoryMenu
+                    }
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
                 }
+                .padding(.vertical, 4)
             }
 
             Section("재료") {
@@ -111,6 +108,8 @@ struct RecipeDetailView: View {
                 }
             }
         }
+        .scrollContentBackground(.hidden)
+        .background(RecipeTheme.background)
         .navigationTitle(recipe.title)
         .navigationBarTitleDisplayMode(.inline)
         .toolbar {
@@ -170,6 +169,11 @@ struct RecipeDetailView: View {
         } message: {
             Text(favoriteErrorMessage ?? "다시 시도해 주세요.")
         }
+        .alert("카테고리 저장 실패", isPresented: isShowingCategoryError) {
+            Button("확인", role: .cancel) {}
+        } message: {
+            Text(categoryErrorMessage ?? "다시 시도해 주세요.")
+        }
     }
 
     private var isShowingFavoriteError: Binding<Bool> {
@@ -192,6 +196,61 @@ struct RecipeDetailView: View {
                 }
             }
         )
+    }
+
+    private var isShowingCategoryError: Binding<Bool> {
+        Binding(
+            get: { categoryErrorMessage != nil },
+            set: { isPresented in
+                if !isPresented {
+                    categoryErrorMessage = nil
+                }
+            }
+        )
+    }
+
+    private var categoryMenu: some View {
+        Menu {
+            ForEach(RecipeCategoryCatalog.editorOptions(including: recipe.categoryName ?? ""), id: \.self) { categoryName in
+                Button {
+                    updateCategoryName(categoryName)
+                } label: {
+                    Label(
+                        categoryName.isEmpty ? "선택 안 함" : categoryName,
+                        systemImage: isSelectedCategory(categoryName) ? "checkmark" : "tag"
+                    )
+                }
+            }
+        } label: {
+            Label(recipe.categoryName?.isEmpty == false ? recipe.categoryName ?? "" : "카테고리 없음", systemImage: "tag")
+        }
+        .tint(RecipeTheme.sage)
+    }
+
+    private func isSelectedCategory(_ categoryName: String) -> Bool {
+        (recipe.categoryName ?? "") == categoryName
+    }
+
+    private func updateCategoryName(_ categoryName: String) {
+        let originalCategoryName = recipe.categoryName
+        let originalUpdatedAt = recipe.updatedAt
+        let nextCategoryName = categoryName.trimmingCharacters(in: .whitespacesAndNewlines)
+        let nextStoredCategoryName = nextCategoryName.isEmpty ? nil : nextCategoryName
+
+        guard originalCategoryName != nextStoredCategoryName else {
+            return
+        }
+
+        recipe.categoryName = nextStoredCategoryName
+        recipe.markUpdated()
+
+        do {
+            try modelContext.save()
+        } catch {
+            recipe.categoryName = originalCategoryName
+            recipe.updatedAt = originalUpdatedAt
+            categoryErrorMessage = error.localizedDescription
+        }
     }
 
     private func toggleFavorite() {
@@ -219,17 +278,6 @@ struct RecipeDetailView: View {
             modelContext.rollback()
             deleteErrorMessage = error.localizedDescription
         }
-    }
-
-    private var hasHeaderContent: Bool {
-        recipe.recipeDescription?.isEmpty == false || hasSummaryValues
-    }
-
-    private var hasSummaryValues: Bool {
-        recipe.isFavorite
-        || !recipe.servingText.isEmpty
-        || recipe.cookingTimeMinutes != nil
-        || recipe.categoryName?.isEmpty == false
     }
 
     private var shouldShowIngredientGroupTitle: Bool {

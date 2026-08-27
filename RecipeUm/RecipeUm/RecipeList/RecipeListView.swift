@@ -29,8 +29,8 @@ struct RecipeListView: View {
         filter.filteredRecipes(from: recipes)
     }
 
-    private var availableCategoryNames: [String] {
-        recipes.availableCategoryNames()
+    private var categorySummaries: [RecipeCategorySummary] {
+        RecipeCategoryCatalog.summaries(for: recipes)
     }
 
     var body: some View {
@@ -39,11 +39,11 @@ struct RecipeListView: View {
                 HStack(alignment: .center) {
                     Text("RecipeUm")
                         .font(.largeTitle.bold())
+                        .foregroundStyle(RecipeTheme.espresso)
 
                     Spacer()
 
                     favoriteFilterButton
-                    categoryFilterMenu
 
                     Button {
                         isPresentingNewRecipe = true
@@ -52,9 +52,14 @@ struct RecipeListView: View {
                             .labelStyle(.iconOnly)
                     }
                     .buttonStyle(.borderedProminent)
+                    .tint(RecipeTheme.sage)
                     .accessibilityLabel("레시피 추가")
                 }
-                .padding(.horizontal)
+                .padding(.horizontal, 20)
+
+                searchField
+
+                categoryBrowser
 
                 if recipes.isEmpty {
                     ContentUnavailableView {
@@ -86,6 +91,7 @@ struct RecipeListView: View {
                                 } label: {
                                     RecipeRow(recipe: recipe)
                                 }
+                                .listRowBackground(Color.clear)
                                 .swipeActions(edge: .leading) {
                                     Button {
                                         toggleFavorite(recipe)
@@ -100,11 +106,18 @@ struct RecipeListView: View {
                             }
                         }
                         .listStyle(.plain)
+                        .scrollContentBackground(.hidden)
                     }
                 }
             }
+            .background(RecipeTheme.background.ignoresSafeArea())
             .toolbar(.hidden, for: .navigationBar)
-            .searchable(text: $searchText, prompt: "레시피 또는 재료 검색")
+            .onAppear {
+                clearMissingSelectedCategory(in: categorySummaries)
+            }
+            .onChange(of: categorySummaries) { _, summaries in
+                clearMissingSelectedCategory(in: summaries)
+            }
             .sheet(isPresented: $isPresentingNewRecipe) {
                 RecipeEditorView(navigationTitle: "레시피 추가") { draft in
                     let recipe = draft.makeRecipe()
@@ -126,6 +139,84 @@ struct RecipeListView: View {
         }
     }
 
+    private var searchField: some View {
+        HStack(spacing: 10) {
+            Image(systemName: "magnifyingglass")
+                .foregroundStyle(RecipeTheme.sage)
+
+            TextField("레시피 또는 재료 검색", text: $searchText)
+                .textInputAutocapitalization(.never)
+                .autocorrectionDisabled()
+
+            if !searchText.isEmpty {
+                Button {
+                    searchText = ""
+                } label: {
+                    Image(systemName: "xmark.circle.fill")
+                        .foregroundStyle(.secondary)
+                }
+                .buttonStyle(.plain)
+                .accessibilityLabel("검색어 지우기")
+            }
+        }
+        .font(.body)
+        .padding(.horizontal, 16)
+        .padding(.vertical, 12)
+        .background(.white, in: Capsule())
+        .shadow(color: .black.opacity(0.06), radius: 14, y: 6)
+        .padding(.horizontal, 20)
+    }
+
+    @ViewBuilder
+    private var categoryBrowser: some View {
+        if !categorySummaries.isEmpty || selectedCategoryName != nil {
+            ScrollView(.horizontal, showsIndicators: false) {
+                HStack(spacing: 8) {
+                    categoryChip(title: "전체", count: recipes.count, isSelected: selectedCategoryName == nil) {
+                        selectedCategoryName = nil
+                    }
+
+                    ForEach(categorySummaries) { summary in
+                        categoryChip(
+                            title: summary.name,
+                            count: summary.recipeCount,
+                            isSelected: selectedCategoryName == summary.name
+                        ) {
+                            selectedCategoryName = summary.name
+                        }
+                    }
+                }
+                .padding(.horizontal)
+            }
+        }
+    }
+
+    private func categoryChip(
+        title: String,
+        count: Int,
+        isSelected: Bool,
+        action: @escaping () -> Void
+    ) -> some View {
+        Button(action: action) {
+            HStack(spacing: 6) {
+                Text(title)
+                Text("\(count)")
+                    .font(.caption.weight(.semibold))
+                    .foregroundStyle(isSelected ? .white : .secondary)
+            }
+            .font(.subheadline.weight(.semibold))
+            .padding(.horizontal, 12)
+            .padding(.vertical, 8)
+            .foregroundStyle(isSelected ? .white : RecipeTheme.espresso)
+            .background(isSelected ? RecipeTheme.sage : .white, in: Capsule())
+            .overlay(
+                Capsule()
+                    .stroke(RecipeTheme.sage.opacity(isSelected ? 0 : 0.18), lineWidth: 1)
+            )
+        }
+        .buttonStyle(.plain)
+    }
+
     private var isShowingFavoriteError: Binding<Bool> {
         Binding(
             get: { favoriteErrorMessage != nil },
@@ -145,30 +236,8 @@ struct RecipeListView: View {
                 .labelStyle(.iconOnly)
         }
         .buttonStyle(.bordered)
-        .tint(isFavoritesOnly ? .yellow : nil)
+        .tint(isFavoritesOnly ? RecipeTheme.apricot : RecipeTheme.sage)
         .accessibilityLabel(isFavoritesOnly ? "전체 레시피 보기" : "즐겨찾기만 보기")
-    }
-
-    @ViewBuilder
-    private var categoryFilterMenu: some View {
-        if !availableCategoryNames.isEmpty || selectedCategoryName != nil {
-            Menu {
-                Button("전체") {
-                    selectedCategoryName = nil
-                }
-
-                ForEach(availableCategoryNames, id: \.self) { categoryName in
-                    Button(categoryName) {
-                        selectedCategoryName = categoryName
-                    }
-                }
-            } label: {
-                Label(selectedCategoryName ?? "카테고리 필터", systemImage: "line.3.horizontal.decrease.circle")
-                    .labelStyle(.iconOnly)
-            }
-            .buttonStyle(.bordered)
-            .accessibilityLabel(selectedCategoryName.map { "\($0) 필터 적용 중" } ?? "카테고리 필터")
-        }
     }
 
     private func toggleFavorite(_ recipe: Recipe) {
@@ -186,6 +255,14 @@ struct RecipeListView: View {
             favoriteErrorMessage = error.localizedDescription
         }
     }
+
+    private func clearMissingSelectedCategory(in summaries: [RecipeCategorySummary]) {
+        guard !RecipeCategoryCatalog.contains(selectedCategoryName, in: summaries) else {
+            return
+        }
+
+        selectedCategoryName = nil
+    }
 }
 
 private struct RecipeRow: View {
@@ -200,7 +277,7 @@ private struct RecipeRow: View {
                 if recipe.isFavorite {
                     Image(systemName: "star.fill")
                         .font(.caption)
-                        .foregroundStyle(.yellow)
+                        .foregroundStyle(RecipeTheme.terracotta)
                 }
 
                 Spacer()
@@ -208,10 +285,10 @@ private struct RecipeRow: View {
                 if let categoryName = recipe.categoryName, !categoryName.isEmpty {
                     Text(categoryName)
                         .font(.caption)
-                        .foregroundStyle(.secondary)
+                        .foregroundStyle(RecipeTheme.sage)
                         .padding(.horizontal, 8)
                         .padding(.vertical, 4)
-                        .background(.thinMaterial, in: Capsule())
+                        .background(RecipeTheme.sage.opacity(0.12), in: Capsule())
                 }
             }
         }
