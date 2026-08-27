@@ -88,7 +88,7 @@ Phase 2 Library Experience is complete:
 
 Next phase:
 
-- Phase 3 Export: image recipe card, PDF export, and native iOS share sheet
+- Phase 3 Image Export: receipt/memo/card image templates, preview selection, Photos save, and native iOS share sheet
 
 ## Not In Scope Yet
 
@@ -100,6 +100,7 @@ Next phase:
 - AI-based full recipe extraction
 - OCR extraction
 - Automatic serving conversion
+- PDF export
 - Separate collection model
 
 ## License

@@ -123,7 +123,7 @@ Status: merged.
 - defer separate collections until real usage shows that one category is not enough
 - keep category behavior local-first and lightweight
 
-### 5. Phase 3 Export
+### 5. Phase 3 Image Export
 
 Status: next.
 
@@ -131,24 +131,27 @@ Build self-contained export so saved recipes remain useful outside RecipeUm.
 
 Phase 3 should keep export local-first and avoid AI extraction, account systems,
 CloudKit, or social sharing features. The target is not a public publishing
-system; it is personal ownership through image/PDF artifacts and the native iOS
-share sheet.
+system; it is personal ownership through image artifacts and the native iOS
+share sheet. PDF export is deferred until real usage shows a need for printable
+or document-style artifacts.
 
-#### PR 1 — Export Snapshot And Image Card
+#### PR 1 — Export Snapshot, Image Card, And Template Preview
 
 Status: next.
 
-Goal: define the export content once and generate a useful image recipe card.
+Goal: define the export content once and generate useful image recipe cards.
 
 Suggested tasks:
 
 - create a recipe export snapshot type that copies display-ready recipe data
 - include title, serving text, cooking time, category, ingredient groups, steps, notes, and source metadata when present
 - preserve ingredient group order, ingredient order, and cooking step order
-- build a SwiftUI export card view that can render without depending on navigation state
+- add receipt, memo, and recipe card export template options
+- build SwiftUI export card views that can render without depending on navigation state
+- add a preview/selection screen before sharing
 - add an export entry point from recipe detail
 - generate an image export locally
-- present the iOS share sheet for the generated image
+- let users save the generated image to Photos or share it through the iOS share sheet
 - add tests for snapshot ordering and optional field inclusion
 
 Definition of done:
@@ -158,38 +161,15 @@ Definition of done:
 - missing optional fields do not leave awkward empty sections
 - build and relevant tests pass
 
-#### PR 2 — PDF Export
+#### PR 2 — Export UX Polish
 
 Status: planned.
 
-Goal: generate a printable/shareable PDF using the same export snapshot.
-
-Suggested tasks:
-
-- create a PDF renderer using native Apple frameworks
-- reuse export snapshot data instead of reading SwiftData models directly from PDF code
-- support multi-page output when recipes are long
-- include ingredients, cooking steps, personal notes, and source metadata
-- present the iOS share sheet for the generated PDF
-- add focused tests for export snapshot behavior and renderer input assumptions
-
-Definition of done:
-
-- a recipe can be exported as a PDF from the detail screen
-- long recipes do not silently drop content
-- image and PDF exports use the same source data shape
-- build and relevant tests pass
-
-#### PR 3 — Export Options And UX Pass
-
-Status: planned.
-
-Goal: make export choices clear without turning sharing into a social feature.
+Goal: make image export choices clear without turning sharing into a social feature.
 
 Suggested tasks:
 
 - provide a lightweight export menu or confirmation flow
-- allow the user to choose image or PDF
 - decide whether personal notes and source metadata are included by default
 - improve export error handling and temporary file cleanup
 - update README and roadmap after Phase 3 is merged
@@ -199,6 +179,14 @@ Definition of done:
 - export actions are discoverable from recipe detail
 - failures are shown to the user without dismissing context unexpectedly
 - export remains local-only and account-free
+
+#### Deferred — PDF Export
+
+Status: deferred.
+
+PDF export may be added later if users need printable or document-style recipe
+artifacts. It should reuse the export snapshot introduced in Phase 3 instead of
+reading SwiftData models directly from PDF code.
 
 #### Next Session Starting Point
 

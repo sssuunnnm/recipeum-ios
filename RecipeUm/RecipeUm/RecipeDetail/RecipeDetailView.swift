@@ -15,6 +15,7 @@ struct RecipeDetailView: View {
     let recipe: Recipe
 
     @State private var isPresentingEditor = false
+    @State private var exportPresentation: RecipeExportPresentation?
     @State private var isPresentingDeleteConfirmation = false
     @State private var favoriteErrorMessage: String?
     @State private var categoryErrorMessage: String?
@@ -125,6 +126,14 @@ struct RecipeDetailView: View {
                     }
 
                     Button {
+                        exportPresentation = RecipeExportPresentation(
+                            snapshot: RecipeExportSnapshot(recipe: recipe)
+                        )
+                    } label: {
+                        Label("내보내기", systemImage: "square.and.arrow.up")
+                    }
+
+                    Button {
                         isPresentingEditor = true
                     } label: {
                         Label("수정", systemImage: "pencil")
@@ -147,6 +156,9 @@ struct RecipeDetailView: View {
             ) { draft in
                 try replaceDetailFields(with: draft)
             }
+        }
+        .sheet(item: $exportPresentation) { presentation in
+            RecipeExportPreviewView(snapshot: presentation.snapshot)
         }
         .confirmationDialog(
             "이 레시피를 삭제할까요?",
@@ -301,6 +313,11 @@ struct RecipeDetailView: View {
             throw error
         }
     }
+}
+
+private struct RecipeExportPresentation: Identifiable {
+    let id = UUID()
+    let snapshot: RecipeExportSnapshot
 }
 
 private struct IngredientLineView: View {

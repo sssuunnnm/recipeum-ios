@@ -71,7 +71,6 @@ The MVP should focus on creating and maintaining a personal recipe archive.
 - Favorites
 - Basic categories or collections
 - Export recipe as image
-- Export recipe as PDF
 - Local persistence with SwiftData
 
 ### Not required for MVP
@@ -122,9 +121,9 @@ The MVP should focus on creating and maintaining a personal recipe archive.
 
 1. User opens a recipe.
 2. User selects Share / Export.
-3. User chooses Image or PDF.
-4. App generates a self-contained recipe artifact.
-5. User saves or shares the generated file through the iOS share sheet.
+3. User chooses an image template.
+4. App generates a self-contained recipe image.
+5. User saves the image to Photos or shares it through the iOS share sheet.
 
 ## 6. Functional Requirements
 
@@ -304,10 +303,7 @@ Avoid over-designing taxonomy in the first implementation.
 
 ## 6.10 Export
 
-A recipe should be exportable as:
-
-- image recipe card
-- PDF recipe sheet
+A recipe should be exportable as an image recipe card.
 
 Exported content should be useful without opening Recipe Archive.
 
@@ -321,6 +317,9 @@ At minimum, exports should contain:
 - personal notes when included by the user
 
 The source URL may be included as optional metadata.
+
+PDF export may be added later if real usage shows a need for printable or
+document-style recipe artifacts, but it is not required for the MVP.
 
 ## 7. Data Rules
 
@@ -402,7 +401,6 @@ Initial implementation direction:
 ### Phase 3 — Export
 
 - Recipe image export
-- PDF export
 - iOS share sheet
 
 ### Phase 4 — Data Durability
@@ -419,6 +417,12 @@ Only after the core archive is stable:
 - AI-assisted recipe draft generation
 - Image / OCR assisted extraction
 - Improved natural-language ingredient parsing
+
+### Deferred / Conditional
+
+PDF export may be considered later if real usage shows a need for printable or
+document-style recipe artifacts. It is not a committed Phase 5 Smart Input
+feature.
 
 ## 11. Out of Scope Principles
 
