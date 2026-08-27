@@ -417,7 +417,12 @@ Only after the core archive is stable:
 - AI-assisted recipe draft generation
 - Image / OCR assisted extraction
 - Improved natural-language ingredient parsing
-- PDF export
+
+### Deferred / Conditional
+
+PDF export may be considered later if real usage shows a need for printable or
+document-style recipe artifacts. It is not a committed Phase 5 Smart Input
+feature.
 
 ## 11. Out of Scope Principles
 
