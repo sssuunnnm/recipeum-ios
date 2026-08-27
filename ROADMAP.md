@@ -86,6 +86,8 @@ Status: merged.
 
 ### 4. Phase 2 Library Experience
 
+Status: complete.
+
 Build the first useful browsing and retrieval layer on top of the local archive.
 
 UX refinement remains important, but the next priority is to add enough library
@@ -94,7 +96,7 @@ PR on polish.
 
 #### PR 1 — Search And Basic Library Filters
 
-Status: complete.
+Status: merged.
 
 - search recipes by title
 - search recipes by ingredient raw text or parsed ingredient name
@@ -104,7 +106,7 @@ Status: complete.
 
 #### PR 2 — Favorites
 
-Status: complete.
+Status: merged.
 
 - mark and unmark recipes as favorites
 - show favorite state in list and detail
@@ -113,14 +115,103 @@ Status: complete.
 
 #### PR 3 — Category And Collection Basics
 
-Status: next.
+Status: merged.
 
 - revisit MVP category options with real usage feedback
 - category browsing entry point
-- basic collection direction if categories alone are not enough
+- detail-level category editing
+- defer separate collections until real usage shows that one category is not enough
 - keep category behavior local-first and lightweight
 
-### 5. Parser Tests And Edge Cases
+### 5. Phase 3 Export
+
+Status: next.
+
+Build self-contained export so saved recipes remain useful outside RecipeUm.
+
+Phase 3 should keep export local-first and avoid AI extraction, account systems,
+CloudKit, or social sharing features. The target is not a public publishing
+system; it is personal ownership through image/PDF artifacts and the native iOS
+share sheet.
+
+#### PR 1 — Export Snapshot And Image Card
+
+Status: next.
+
+Goal: define the export content once and generate a useful image recipe card.
+
+Suggested tasks:
+
+- create a recipe export snapshot type that copies display-ready recipe data
+- include title, serving text, cooking time, category, ingredient groups, steps, notes, and source metadata when present
+- preserve ingredient group order, ingredient order, and cooking step order
+- build a SwiftUI export card view that can render without depending on navigation state
+- add an export entry point from recipe detail
+- generate an image export locally
+- present the iOS share sheet for the generated image
+- add tests for snapshot ordering and optional field inclusion
+
+Definition of done:
+
+- a recipe can be exported as an image from the detail screen
+- exported content is useful without opening RecipeUm
+- missing optional fields do not leave awkward empty sections
+- build and relevant tests pass
+
+#### PR 2 — PDF Export
+
+Status: planned.
+
+Goal: generate a printable/shareable PDF using the same export snapshot.
+
+Suggested tasks:
+
+- create a PDF renderer using native Apple frameworks
+- reuse export snapshot data instead of reading SwiftData models directly from PDF code
+- support multi-page output when recipes are long
+- include ingredients, cooking steps, personal notes, and source metadata
+- present the iOS share sheet for the generated PDF
+- add focused tests for export snapshot behavior and renderer input assumptions
+
+Definition of done:
+
+- a recipe can be exported as a PDF from the detail screen
+- long recipes do not silently drop content
+- image and PDF exports use the same source data shape
+- build and relevant tests pass
+
+#### PR 3 — Export Options And UX Pass
+
+Status: planned.
+
+Goal: make export choices clear without turning sharing into a social feature.
+
+Suggested tasks:
+
+- provide a lightweight export menu or confirmation flow
+- allow the user to choose image or PDF
+- decide whether personal notes and source metadata are included by default
+- improve export error handling and temporary file cleanup
+- update README and roadmap after Phase 3 is merged
+
+Definition of done:
+
+- export actions are discoverable from recipe detail
+- failures are shown to the user without dismissing context unexpectedly
+- export remains local-only and account-free
+
+#### Next Session Starting Point
+
+Start with Phase 3 PR 1 on a new feature branch.
+
+Before coding:
+
+- read `SPEC.md` sections 5.4, 6.10, 7.4, and 10
+- inspect `RecipeDetailView`, recipe models, and sorted relationship helpers
+- keep export rendering separate from SwiftData mutation code
+- commit each task separately
+
+### 6. Parser Tests And Edge Cases
 
 Build confidence in the ingredient parser with focused tests.
 
@@ -134,7 +225,7 @@ Important early examples:
 - `소금 취향껏`
 - `대파 흰 부분 손가락 두 마디 정도`
 
-### 6. UI Refinement
+### 7. UI Refinement
 
 Polish the archive after Phase 2 exposes the real list, search, favorites, and
 category workflows. This section should not duplicate feature scope. Move items
@@ -146,6 +237,7 @@ without changing source-of-truth behavior in `SPEC.md`.
 - detail layout polish
 - form validation copy
 - small navigation and editing ergonomics
+- app icon refinement after a final production icon is chosen
 
 ## Deferred Until The Core Is Stable
 

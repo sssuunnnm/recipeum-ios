@@ -290,7 +290,10 @@ Examples:
 - 중식
 - 디저트
 
-Collections may later be expanded into user-defined groups such as:
+For the current MVP, category is a single lightweight recipe field.
+
+Collections are deferred. They may later be expanded into user-defined groups
+such as:
 
 - 자취 요리
 - 엄마 레시피

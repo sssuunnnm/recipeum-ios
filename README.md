@@ -12,7 +12,8 @@ or change over time. RecipeUm is built around the idea that a saved recipe shoul
 remain useful even when its original source is no longer available.
 
 The current app focuses on manual entry, natural-language ingredient input,
-multi-line paste, local persistence, and editable recipe detail fields.
+multi-line paste, local persistence, editable recipe detail fields, and basic
+library browsing.
 
 ## Current Features
 
@@ -28,7 +29,7 @@ multi-line paste, local persistence, and editable recipe detail fields.
 - Source metadata
 - Category selection
 - Recipe search by title or ingredient
-- Basic category filtering
+- Category browsing
 - Favorites
 - Local persistence with SwiftData
 - Unit tests for parser, model ordering, save/reopen, draft conversion, library filtering, and favorites flows
@@ -79,11 +80,15 @@ Phase 1 Core Archive is complete:
 - PR 2: ingredient input and review flow
 - PR 3: recipe CRUD and detail fields
 
-Phase 2 Library Experience is in progress:
+Phase 2 Library Experience is complete:
 
 - PR 1: search and basic library filters
 - PR 2: favorites
-- Next: PR 3 category and collection basics
+- PR 3: category browsing and lightweight collection decision
+
+Next phase:
+
+- Phase 3 Export: image recipe card, PDF export, and native iOS share sheet
 
 ## Not In Scope Yet
 
@@ -95,7 +100,7 @@ Phase 2 Library Experience is in progress:
 - AI-based full recipe extraction
 - OCR extraction
 - Automatic serving conversion
-- Image/PDF export
+- Separate collection model
 
 ## License
 

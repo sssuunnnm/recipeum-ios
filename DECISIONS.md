@@ -348,3 +348,36 @@ The library can support basic category browsing without over-designing taxonomy.
 
 Collections can be revisited later after real recipes reveal whether categories
 alone are not enough.
+
+---
+
+## D018 — Defer collections but keep category code extensible
+
+### Context
+
+After Phase 2, RecipeUm supports search, favorites, category browsing, and
+detail-level category editing.
+
+Categories and collections are related but solve different problems:
+
+- category: one lightweight primary classification for a recipe
+- collection: user-defined multi-membership grouping for a purpose or situation
+
+Examples of future collections include 자주 만드는 요리, 손님상, 도시락, 엄마
+레시피, and 다이어트.
+
+### Decision
+
+Do not add a separate collection model for the current MVP.
+
+Continue using one category field as the basic browsing mechanism. Keep category
+filtering, category option generation, and category display logic separated from
+View-only code so that future collection behavior can be added without rewriting
+the recipe model or list filtering from scratch.
+
+### Consequence
+
+The current app stays simpler and easier to use while the recipe count is small.
+
+If real usage shows that one category is not enough, collections can be added as
+a separate feature with their own model and many-to-many recipe membership.
