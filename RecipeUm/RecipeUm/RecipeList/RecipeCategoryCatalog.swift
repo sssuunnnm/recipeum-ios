@@ -66,6 +66,16 @@ enum RecipeCategoryCatalog {
             .compactMap { summariesByKey[$0] }
             .sorted { $0.name < $1.name }
     }
+
+    static func contains(_ categoryName: String?, in summaries: [RecipeCategorySummary]) -> Bool {
+        guard let categoryKey = categoryName?.normalizedForCategoryCatalog,
+              !categoryKey.isEmpty
+        else {
+            return true
+        }
+
+        return summaries.contains { $0.id == categoryKey }
+    }
 }
 
 private extension String {

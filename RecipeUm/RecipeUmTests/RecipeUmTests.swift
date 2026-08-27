@@ -740,6 +740,17 @@ struct RecipeUmTests {
         ])
     }
 
+    @Test func checksSelectedCategoryAgainstCurrentSummaries() {
+        let summaries = [
+            RecipeCategorySummary(name: "Dessert", recipeCount: 2),
+            RecipeCategorySummary(name: "한식", recipeCount: 1),
+        ]
+
+        #expect(RecipeCategoryCatalog.contains(nil, in: summaries))
+        #expect(RecipeCategoryCatalog.contains("dessert", in: summaries))
+        #expect(!RecipeCategoryCatalog.contains("분식", in: summaries))
+    }
+
     private struct SearchRecipeFixture {
         let title: String
         var categoryName: String?

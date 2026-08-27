@@ -112,6 +112,12 @@ struct RecipeListView: View {
             }
             .background(RecipeTheme.background.ignoresSafeArea())
             .toolbar(.hidden, for: .navigationBar)
+            .onAppear {
+                clearMissingSelectedCategory(in: categorySummaries)
+            }
+            .onChange(of: categorySummaries) { _, summaries in
+                clearMissingSelectedCategory(in: summaries)
+            }
             .sheet(isPresented: $isPresentingNewRecipe) {
                 RecipeEditorView(navigationTitle: "레시피 추가") { draft in
                     let recipe = draft.makeRecipe()
@@ -163,7 +169,7 @@ struct RecipeListView: View {
 
     @ViewBuilder
     private var categoryBrowser: some View {
-        if !categorySummaries.isEmpty {
+        if !categorySummaries.isEmpty || selectedCategoryName != nil {
             ScrollView(.horizontal, showsIndicators: false) {
                 HStack(spacing: 8) {
                     categoryChip(title: "전체", count: recipes.count, isSelected: selectedCategoryName == nil) {
@@ -196,7 +202,7 @@ struct RecipeListView: View {
                 Text(title)
                 Text("\(count)")
                     .font(.caption.weight(.semibold))
-                    .foregroundStyle(isSelected ? .white.opacity(0.8) : .secondary)
+                    .foregroundStyle(isSelected ? .white : .secondary)
             }
             .font(.subheadline.weight(.semibold))
             .padding(.horizontal, 12)
@@ -248,6 +254,14 @@ struct RecipeListView: View {
             recipe.updatedAt = originalUpdatedAt
             favoriteErrorMessage = error.localizedDescription
         }
+    }
+
+    private func clearMissingSelectedCategory(in summaries: [RecipeCategorySummary]) {
+        guard !RecipeCategoryCatalog.contains(selectedCategoryName, in: summaries) else {
+            return
+        }
+
+        selectedCategoryName = nil
     }
 }
 
