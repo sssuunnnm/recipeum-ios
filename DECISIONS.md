@@ -381,3 +381,33 @@ The current app stays simpler and easier to use while the recipe count is small.
 
 If real usage shows that one category is not enough, collections can be added as
 a separate feature with their own model and many-to-many recipe membership.
+
+---
+
+## D019 — Defer PDF export until usage validates the need
+
+### Context
+
+RecipeUm needs export because saved recipes should remain useful outside the
+app. The original MVP scope included both image and PDF export, but the likely
+near-term sharing and saving flow is an image recipe card.
+
+PDF export adds extra layout concerns such as pagination, printable formatting,
+and long-recipe overflow handling. Those concerns are valuable only if users
+actually need document-style recipe artifacts.
+
+### Decision
+
+Phase 3 will focus on image export first.
+
+Support receipt-style, memo-style, and recipe-card-style image cards with a
+preview/selection flow.
+Defer PDF export until real usage or user requests show that printable artifacts
+are worth adding.
+
+### Consequence
+
+The export phase stays smaller and closer to the most likely user workflow.
+
+If PDF export is added later, it should reuse the same export snapshot used by
+image export so that export data rules remain consistent.

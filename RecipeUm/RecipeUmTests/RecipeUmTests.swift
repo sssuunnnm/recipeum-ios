@@ -332,6 +332,78 @@ struct RecipeUmTests {
         #expect(savedRecipe.sortedIngredientGroups.first?.sortedIngredients.map(\.name) == ["김치", "고춧가루"])
     }
 
+    @Test @MainActor func buildsExportSnapshotInDisplayOrder() {
+        let recipe = Recipe(
+            title: "비빔만두",
+            recipeDescription: "매콤한 간식",
+            servingText: "2인분",
+            cookingTimeMinutes: 25,
+            personalNotes: "양념은 먹기 직전에 섞는다.",
+            categoryName: "분식"
+        )
+        let seasoningGroup = IngredientGroup(title: "양념", sortOrder: 1)
+        seasoningGroup.ingredients = [
+            RecipeIngredient(rawText: "설탕 1큰술", name: "설탕", amountText: "1", unit: "큰술", parseStatus: .parsed, sortOrder: 1),
+            RecipeIngredient(rawText: "고추장 2큰술", name: "고추장", amountText: "2", unit: "큰술", parseStatus: .parsed, sortOrder: 0),
+        ]
+        let baseGroup = IngredientGroup(title: "기본 재료", sortOrder: 0)
+        baseGroup.ingredients = [
+            RecipeIngredient(rawText: "만두 8개", name: "만두", amountText: "8", unit: "개", parseStatus: .parsed, sortOrder: 0),
+        ]
+        recipe.ingredientGroups = [seasoningGroup, baseGroup]
+        recipe.cookingSteps = [
+            CookingStep(sortOrder: 3, instruction: "양념을 넣는다."),
+            CookingStep(sortOrder: 1, instruction: "만두를 굽는다."),
+        ]
+        recipe.source = RecipeSource(
+            type: .blog,
+            urlString: "https://example.com/bibim",
+            titleOrMemo: "참고 블로그"
+        )
+
+        let snapshot = RecipeExportSnapshot(recipe: recipe)
+
+        #expect(snapshot.title == "비빔만두")
+        #expect(snapshot.recipeDescription == "매콤한 간식")
+        #expect(snapshot.servingText == "2인분")
+        #expect(snapshot.cookingTimeText == "25분")
+        #expect(snapshot.categoryName == "분식")
+        #expect(snapshot.ingredientGroups.map(\.title) == ["기본 재료", "양념"])
+        #expect(snapshot.ingredientGroups[1].ingredients.map(\.rawText) == ["고추장 2큰술", "설탕 1큰술"])
+        #expect(snapshot.cookingSteps.map(\.number) == [1, 2])
+        #expect(snapshot.cookingSteps.map(\.instruction) == ["만두를 굽는다.", "양념을 넣는다."])
+        #expect(snapshot.personalNotes == "양념은 먹기 직전에 섞는다.")
+        #expect(snapshot.source?.typeName == "블로그")
+        #expect(snapshot.source?.urlString == "https://example.com/bibim")
+        #expect(snapshot.source?.titleOrMemo == "참고 블로그")
+    }
+
+    @Test @MainActor func omitsEmptyOptionalExportSnapshotFields() {
+        let recipe = Recipe(
+            title: "계란밥",
+            recipeDescription: "   ",
+            servingText: "   ",
+            personalNotes: "   ",
+            categoryName: "   "
+        )
+        let group = IngredientGroup(title: "기본 재료", sortOrder: 0)
+        group.ingredients = [
+            RecipeIngredient(rawText: "계란 1개", name: "계란", amountText: "1", unit: "개", parseStatus: .parsed, sortOrder: 0),
+        ]
+        recipe.ingredientGroups = [group]
+        recipe.cookingSteps = []
+
+        let snapshot = RecipeExportSnapshot(recipe: recipe)
+
+        #expect(snapshot.recipeDescription == nil)
+        #expect(snapshot.servingText == "")
+        #expect(snapshot.cookingTimeText == nil)
+        #expect(snapshot.categoryName == nil)
+        #expect(snapshot.personalNotes == nil)
+        #expect(snapshot.source == nil)
+        #expect(snapshot.ingredientGroups.count == 1)
+    }
+
     @Test @MainActor func storesRecipeArchiveDataLocally() throws {
         let schema = Schema([
             Recipe.self,
