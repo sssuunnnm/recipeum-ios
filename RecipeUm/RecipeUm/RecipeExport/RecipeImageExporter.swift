@@ -14,11 +14,13 @@ struct RecipeImageExporter {
     func exportImage(
         snapshot: RecipeExportSnapshot,
         template: RecipeExportTemplate,
-        width: CGFloat
+        width: CGFloat,
+        dynamicTypeSize: DynamicTypeSize
     ) throws -> ExportedRecipeImage {
         let renderer = ImageRenderer(
             content: RecipeExportCardView(snapshot: snapshot, template: template)
                 .frame(width: width)
+                .environment(\.dynamicTypeSize, dynamicTypeSize)
         )
         renderer.scale = UIScreen.main.scale
 

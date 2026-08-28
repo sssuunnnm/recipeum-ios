@@ -414,9 +414,14 @@ Only after the core archive is stable:
 
 - Share Sheet URL intake
 - URL metadata extraction
-- AI-assisted recipe draft generation
-- Image / OCR assisted extraction
+- AI-assisted recipe draft generation as an optional review step
+- Image / OCR assisted extraction from photos, books, notes, or screenshots
 - Improved natural-language ingredient parsing
+
+Smart Input features must assist the user rather than replace them. AI or OCR
+output should be presented as an editable draft, and the user must confirm the
+result before it becomes saved recipe data. The app must remain useful without
+AI, OCR, user accounts, or a backend.
 
 ### Deferred / Conditional
 

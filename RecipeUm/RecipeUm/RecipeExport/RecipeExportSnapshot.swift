@@ -56,6 +56,23 @@ struct RecipeExportSnapshot: Equatable {
         personalNotes = recipe.personalNotes.trimmedNilIfEmpty
         source = recipe.source.map(SourceSnapshot.init(source:))
     }
+
+    func applyingExportOptions(
+        includesPersonalNotes: Bool,
+        includesSourceMetadata: Bool
+    ) -> RecipeExportSnapshot {
+        var snapshot = self
+
+        if !includesPersonalNotes {
+            snapshot.personalNotes = nil
+        }
+
+        if !includesSourceMetadata {
+            snapshot.source = nil
+        }
+
+        return snapshot
+    }
 }
 
 extension RecipeExportSnapshot {

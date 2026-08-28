@@ -404,6 +404,34 @@ struct RecipeUmTests {
         #expect(snapshot.ingredientGroups.count == 1)
     }
 
+    @Test func appliesExportOptionsWithoutMutatingOriginalSnapshot() {
+        let snapshot = RecipeExportSnapshot(
+            title: "라면",
+            recipeDescription: nil,
+            servingText: "1인분",
+            cookingTimeText: "5분",
+            categoryName: "면",
+            ingredientGroups: [],
+            cookingSteps: [],
+            personalNotes: "계란은 마지막에 넣기",
+            source: RecipeExportSnapshot.SourceSnapshot(
+                typeName: "블로그",
+                urlString: "https://example.com/ramen",
+                titleOrMemo: "참고"
+            )
+        )
+
+        let exportSnapshot = snapshot.applyingExportOptions(
+            includesPersonalNotes: false,
+            includesSourceMetadata: false
+        )
+
+        #expect(exportSnapshot.personalNotes == nil)
+        #expect(exportSnapshot.source == nil)
+        #expect(snapshot.personalNotes == "계란은 마지막에 넣기")
+        #expect(snapshot.source?.urlString == "https://example.com/ramen")
+    }
+
     @Test @MainActor func storesRecipeArchiveDataLocally() throws {
         let schema = Schema([
             Recipe.self,

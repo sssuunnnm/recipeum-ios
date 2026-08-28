@@ -30,17 +30,17 @@ struct RecipeDetailView: View {
                             .foregroundStyle(.secondary)
                     }
 
-                    HStack(spacing: 8) {
+                    HStack(spacing: 14) {
                         if recipe.isFavorite {
-                            Label("즐겨찾기", systemImage: "star.fill")
+                            metadataLabel("즐겨찾기", systemImage: "star.fill")
                         }
 
                         if !recipe.servingText.isEmpty {
-                            Label(recipe.servingText, systemImage: "person.2")
+                            metadataLabel(recipe.servingText, systemImage: "person.2")
                         }
 
                         if let cookingTimeMinutes = recipe.cookingTimeMinutes {
-                            Label("\(cookingTimeMinutes)분", systemImage: "clock")
+                            metadataLabel("\(cookingTimeMinutes)분", systemImage: "clock")
                         }
 
                         categoryMenu
@@ -91,15 +91,7 @@ struct RecipeDetailView: View {
 
             if let source = recipe.source {
                 Section("출처") {
-                    LabeledContent("종류", value: source.type.displayName)
-
-                    if let urlString = source.urlString {
-                        LabeledContent("URL", value: urlString)
-                    }
-
-                    if !source.titleOrMemo.isEmpty {
-                        LabeledContent("메모", value: source.titleOrMemo)
-                    }
+                    RecipeSourceDetailRows(source: source)
                 }
             }
 
@@ -115,6 +107,14 @@ struct RecipeDetailView: View {
         .navigationBarTitleDisplayMode(.inline)
         .toolbar {
             ToolbarItem(placement: .topBarTrailing) {
+                Button {
+                    presentExportPreview()
+                } label: {
+                    Label("내보내기", systemImage: "square.and.arrow.up")
+                }
+            }
+
+            ToolbarItem(placement: .topBarTrailing) {
                 Menu {
                     Button {
                         toggleFavorite()
@@ -126,9 +126,7 @@ struct RecipeDetailView: View {
                     }
 
                     Button {
-                        exportPresentation = RecipeExportPresentation(
-                            snapshot: RecipeExportSnapshot(recipe: recipe)
-                        )
+                        presentExportPreview()
                     } label: {
                         Label("내보내기", systemImage: "square.and.arrow.up")
                     }
@@ -234,9 +232,16 @@ struct RecipeDetailView: View {
                 }
             }
         } label: {
-            Label(recipe.categoryName?.isEmpty == false ? recipe.categoryName ?? "" : "카테고리 없음", systemImage: "tag")
+            metadataLabel(recipe.categoryName?.isEmpty == false ? recipe.categoryName ?? "" : "카테고리 없음", systemImage: "tag")
         }
         .tint(RecipeTheme.sage)
+    }
+
+    private func metadataLabel(_ text: String, systemImage: String) -> some View {
+        HStack(spacing: 4) {
+            Image(systemName: systemImage)
+            Text(text)
+        }
     }
 
     private func isSelectedCategory(_ categoryName: String) -> Bool {
@@ -281,6 +286,12 @@ struct RecipeDetailView: View {
         }
     }
 
+    private func presentExportPreview() {
+        exportPresentation = RecipeExportPresentation(
+            snapshot: RecipeExportSnapshot(recipe: recipe)
+        )
+    }
+
     private func deleteRecipe() {
         do {
             modelContext.delete(recipe)
@@ -318,6 +329,44 @@ struct RecipeDetailView: View {
 private struct RecipeExportPresentation: Identifiable {
     let id = UUID()
     let snapshot: RecipeExportSnapshot
+}
+
+private struct RecipeSourceDetailRows: View {
+    let source: RecipeSource
+
+    var body: some View {
+        LabeledContent("종류", value: source.type.displayName)
+
+        if source.type != .book, let urlString = source.urlString {
+            sourceURLRow(urlString)
+        }
+
+        if !source.titleOrMemo.isEmpty {
+            LabeledContent(source.type.titleLabel, value: source.titleOrMemo)
+        }
+    }
+
+    @ViewBuilder
+    private func sourceURLRow(_ urlString: String) -> some View {
+        if let url = webURL(from: urlString) {
+            LabeledContent("URL") {
+                Link(urlString, destination: url)
+            }
+        } else {
+            LabeledContent("URL", value: urlString)
+        }
+    }
+
+    private func webURL(from string: String) -> URL? {
+        guard let url = URL(string: string),
+              let scheme = url.scheme?.lowercased(),
+              scheme == "http" || scheme == "https"
+        else {
+            return nil
+        }
+
+        return url
+    }
 }
 
 private struct IngredientLineView: View {
