@@ -14,10 +14,6 @@ struct RecipeEditorView: View {
     let onSave: (RecipeFormDraft) throws -> Void
 
     @State private var draft: RecipeFormDraft
-    @State private var isOptionalInfoExpanded = false
-    @State private var isCookingStepsExpanded = false
-    @State private var isSourceExpanded = false
-    @State private var isNotesExpanded = false
     @State private var saveErrorMessage: String?
 
     private var categoryOptions: [String] {
@@ -32,67 +28,74 @@ struct RecipeEditorView: View {
         self.navigationTitle = navigationTitle
         self.onSave = onSave
         _draft = State(initialValue: draft)
-        _isOptionalInfoExpanded = State(initialValue: draft.hasBasicDetailValues)
-        _isCookingStepsExpanded = State(initialValue: !draft.cookingStepText.trimmedForEditor.isEmpty)
-        _isSourceExpanded = State(initialValue: draft.hasSourceValues)
-        _isNotesExpanded = State(initialValue: !draft.personalNotes.trimmedForEditor.isEmpty)
     }
 
     var body: some View {
         NavigationStack {
             Form {
                 Section {
-                    TextField("레시피 이름", text: $draft.title)
-                    TextEditor(text: $draft.ingredientText)
+                    TextField("레시피 이름 *", text: $draft.title)
+                    Text("재료 *")
+                        .font(.subheadline)
+                        .foregroundStyle(.secondary)
+                    PlaceholderTextEditor(
+                        text: $draft.ingredientText,
+                        placeholder: "[양념]\n간장 2큰술\n설탕 1큰술\n\n재료는 한 줄에 하나씩 입력해요"
+                    )
                         .frame(minHeight: 140)
                         .accessibilityLabel("재료")
                 } header: {
-                    Text("필수")
+                    Text("기본 정보")
                 } footer: {
-                    Text("재료는 한 줄에 하나씩 입력합니다. [양념]처럼 적으면 그룹으로 나눌 수 있습니다.")
+                    Text("* 표시된 항목은 저장에 필요해요.")
                 }
 
-                Section("선택 정보") {
-                    DisclosureGroup("기본 세부 정보", isExpanded: $isOptionalInfoExpanded) {
-                        TextField("분량", text: $draft.servingText)
-                        TextField("조리 시간(분)", text: $draft.cookingTimeMinutesText)
-                            .keyboardType(.numberPad)
+                Section {
+                    TextField("분량", text: $draft.servingText)
+                    TextField("조리 시간(분)", text: $draft.cookingTimeMinutesText)
+                        .keyboardType(.numberPad)
 
-                        Picker("카테고리", selection: $draft.categoryName) {
-                            ForEach(categoryOptions, id: \.self) { categoryName in
-                                Text(categoryName.isEmpty ? "선택 안 함" : categoryName)
-                                    .tag(categoryName)
-                            }
+                    Picker("카테고리", selection: $draft.categoryName) {
+                        ForEach(categoryOptions, id: \.self) { categoryName in
+                            Text(categoryName.isEmpty ? "선택 안 함" : categoryName)
+                                .tag(categoryName)
                         }
-
-                        TextField("간단한 설명", text: $draft.recipeDescription, axis: .vertical)
-                            .lineLimit(2...4)
                     }
 
-                    DisclosureGroup("조리 단계", isExpanded: $isCookingStepsExpanded) {
-                        TextEditor(text: $draft.cookingStepText)
-                            .frame(minHeight: 140)
-                            .accessibilityLabel("조리 단계")
-                    }
+                    TextField("한 줄 요약", text: $draft.recipeDescription, axis: .vertical)
+                        .lineLimit(1...2)
+                } header: {
+                    Text("상단 정보")
+                } footer: {
+                    Text("레시피 상세 화면 맨 위에 표시돼요.")
+                }
 
-                    DisclosureGroup("출처", isExpanded: $isSourceExpanded) {
-                        Picker("종류", selection: $draft.sourceType) {
-                            ForEach(RecipeSourceType.allCases, id: \.self) { sourceType in
-                                Text(sourceType.displayName).tag(sourceType)
-                            }
+                Section("조리 단계") {
+                    PlaceholderTextEditor(
+                        text: $draft.cookingStepText,
+                        placeholder: "물을 끓여요\n재료를 넣고 5분 끓여요\n\nEnter로 구분하면 번호가 자동으로 표시돼요"
+                    )
+                        .frame(minHeight: 140)
+                        .accessibilityLabel("조리 단계")
+                }
+
+                Section("출처") {
+                    Picker("종류", selection: $draft.sourceType) {
+                        ForEach(RecipeSourceType.allCases, id: \.self) { sourceType in
+                            Text(sourceType.displayName).tag(sourceType)
                         }
-                        TextField("URL", text: $draft.sourceURLString)
-                            .keyboardType(.URL)
-                            .textInputAutocapitalization(.never)
-                            .autocorrectionDisabled()
-                        TextField("제목 또는 메모", text: $draft.sourceTitleOrMemo)
                     }
+                    TextField("URL", text: $draft.sourceURLString)
+                        .keyboardType(.URL)
+                        .textInputAutocapitalization(.never)
+                        .autocorrectionDisabled()
+                    TextField(draft.sourceType.titleLabel, text: $draft.sourceTitleOrMemo)
+                }
 
-                    DisclosureGroup("내 메모", isExpanded: $isNotesExpanded) {
-                        TextEditor(text: $draft.personalNotes)
-                            .frame(minHeight: 100)
-                            .accessibilityLabel("내 메모")
-                    }
+                Section("내 메모") {
+                    TextEditor(text: $draft.personalNotes)
+                        .frame(minHeight: 100)
+                        .accessibilityLabel("내 메모")
                 }
             }
             .scrollContentBackground(.hidden)
@@ -147,23 +150,21 @@ struct RecipeEditorView: View {
     RecipeEditorView(navigationTitle: "레시피 추가") { _ in }
 }
 
-private extension RecipeFormDraft {
-    var hasBasicDetailValues: Bool {
-        !servingText.trimmedForEditor.isEmpty
-        || !cookingTimeMinutesText.trimmedForEditor.isEmpty
-        || !categoryName.trimmedForEditor.isEmpty
-        || !recipeDescription.trimmedForEditor.isEmpty
-    }
+private struct PlaceholderTextEditor: View {
+    @Binding var text: String
+    let placeholder: String
 
-    var hasSourceValues: Bool {
-        sourceType != .other
-        || !sourceURLString.trimmedForEditor.isEmpty
-        || !sourceTitleOrMemo.trimmedForEditor.isEmpty
-    }
-}
+    var body: some View {
+        ZStack(alignment: .topLeading) {
+            TextEditor(text: $text)
 
-private extension String {
-    var trimmedForEditor: String {
-        trimmingCharacters(in: .whitespacesAndNewlines)
+            if text.isEmpty {
+                Text(placeholder)
+                    .foregroundStyle(.tertiary)
+                    .padding(.horizontal, 5)
+                    .padding(.vertical, 8)
+                    .allowsHitTesting(false)
+            }
+        }
     }
 }

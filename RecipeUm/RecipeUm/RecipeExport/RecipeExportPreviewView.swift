@@ -12,23 +12,34 @@ import UIKit
 
 struct RecipeExportPreviewView: View {
     @Environment(\.dismiss) private var dismiss
+    @Environment(\.dynamicTypeSize) private var dynamicTypeSize
 
     let snapshot: RecipeExportSnapshot
 
     @State private var selectedTemplate: RecipeExportTemplate = .receipt
+    @State private var includePersonalNotes: Bool
+    @State private var includeSourceMetadata: Bool
+    @State private var exportActionInProgress: ExportAction?
     @State private var sharedImage: SharedImage?
     @State private var exportErrorMessage: String?
     @State private var saveConfirmationMessage: String?
     @State private var exportWidth: CGFloat = 360
 
+    init(snapshot: RecipeExportSnapshot) {
+        self.snapshot = snapshot
+        _includePersonalNotes = State(initialValue: snapshot.personalNotes != nil)
+        _includeSourceMetadata = State(initialValue: false)
+    }
+
     var body: some View {
         NavigationStack {
             VStack(spacing: 0) {
                 templatePicker
+                exportOptions
 
                 GeometryReader { geometry in
                     ScrollView {
-                        RecipeExportCardView(snapshot: snapshot, template: selectedTemplate)
+                        RecipeExportCardView(snapshot: exportSnapshot, template: selectedTemplate)
                             .frame(width: cardWidth(for: geometry.size.width))
                             .padding(.horizontal, horizontalPreviewPadding)
                             .padding(.vertical, 22)
@@ -58,12 +69,14 @@ struct RecipeExportPreviewView: View {
                     } label: {
                         Label("사진에 저장", systemImage: "square.and.arrow.down")
                     }
+                    .disabled(exportActionInProgress != nil)
 
                     Button {
                         exportSelectedTemplate()
                     } label: {
                         Label("공유", systemImage: "square.and.arrow.up")
                     }
+                    .disabled(exportActionInProgress != nil)
                 }
             }
         }
@@ -93,6 +106,39 @@ struct RecipeExportPreviewView: View {
         .background(.bar)
     }
 
+    @ViewBuilder
+    private var exportOptions: some View {
+        if snapshot.personalNotes != nil || snapshot.source?.hasDisplayContent == true {
+            HStack {
+                HStack(spacing: 14) {
+                    if snapshot.personalNotes != nil {
+                        exportOptionToggle("내 메모", isOn: $includePersonalNotes)
+                    }
+
+                    if snapshot.source?.hasDisplayContent == true {
+                        exportOptionToggle("출처", isOn: $includeSourceMetadata)
+                    }
+                }
+
+                Spacer(minLength: 0)
+            }
+            .font(.subheadline.weight(.semibold))
+            .toggleStyle(.switch)
+            .frame(maxWidth: .infinity, alignment: .leading)
+            .padding(.horizontal)
+            .padding(.bottom, 12)
+            .background(.bar)
+        }
+    }
+
+    private func exportOptionToggle(_ title: String, isOn: Binding<Bool>) -> some View {
+        HStack(spacing: 6) {
+            Text(title)
+            Toggle(title, isOn: isOn)
+                .labelsHidden()
+        }
+    }
+
     private var horizontalPreviewPadding: CGFloat {
         16
     }
@@ -119,16 +165,31 @@ struct RecipeExportPreviewView: View {
         )
     }
 
+    private var exportSnapshot: RecipeExportSnapshot {
+        snapshot.applyingExportOptions(
+            includesPersonalNotes: includePersonalNotes,
+            includesSourceMetadata: includeSourceMetadata
+        )
+    }
+
     private func cardWidth(for availableWidth: CGFloat) -> CGFloat {
         max(280, availableWidth - horizontalPreviewPadding * 2)
     }
 
     private func exportSelectedTemplate() {
+        guard exportActionInProgress == nil else {
+            return
+        }
+
+        exportActionInProgress = .share
+        defer { exportActionInProgress = nil }
+
         do {
             let exportedImage = try RecipeImageExporter().exportImage(
-                snapshot: snapshot,
+                snapshot: exportSnapshot,
                 template: selectedTemplate,
-                width: exportWidth
+                width: exportWidth,
+                dynamicTypeSize: dynamicTypeSize
             )
             sharedImage = SharedImage(image: exportedImage.image)
         } catch {
@@ -137,14 +198,22 @@ struct RecipeExportPreviewView: View {
     }
 
     private func saveSelectedTemplateToPhotos() {
+        guard exportActionInProgress == nil else {
+            return
+        }
+
+        exportActionInProgress = .saveToPhotos
+
         do {
             let exportedImage = try RecipeImageExporter().exportImage(
-                snapshot: snapshot,
+                snapshot: exportSnapshot,
                 template: selectedTemplate,
-                width: exportWidth
+                width: exportWidth,
+                dynamicTypeSize: dynamicTypeSize
             )
             saveToPhotos(exportedImage.image)
         } catch {
+            exportActionInProgress = nil
             exportErrorMessage = error.localizedDescription
         }
     }
@@ -153,6 +222,7 @@ struct RecipeExportPreviewView: View {
         PHPhotoLibrary.requestAuthorization(for: .addOnly) { status in
             Task { @MainActor in
                 guard status == .authorized || status == .limited else {
+                    exportActionInProgress = nil
                     exportErrorMessage = "사진 추가 권한이 필요합니다."
                     return
                 }
@@ -161,6 +231,8 @@ struct RecipeExportPreviewView: View {
                     PHAssetChangeRequest.creationRequestForAsset(from: image)
                 } completionHandler: { success, error in
                     Task { @MainActor in
+                        exportActionInProgress = nil
+
                         if success {
                             saveConfirmationMessage = "사진 앱에 저장했습니다."
                         } else {
@@ -171,6 +243,11 @@ struct RecipeExportPreviewView: View {
             }
         }
     }
+}
+
+private enum ExportAction {
+    case share
+    case saveToPhotos
 }
 
 private struct SharedImage: Identifiable {

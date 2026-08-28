@@ -219,6 +219,15 @@ extension RecipeSourceType {
             "기타"
         }
     }
+
+    var titleLabel: String {
+        switch self {
+        case .book:
+            "책 제목"
+        default:
+            "메모"
+        }
+    }
 }
 
 private extension String {

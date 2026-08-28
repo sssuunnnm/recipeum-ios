@@ -25,64 +25,60 @@ struct RecipeExportCardView: View {
 
 private struct ReceiptRecipeExportCard: View {
     let snapshot: RecipeExportSnapshot
+    @ScaledMetric(relativeTo: .body) private var brandFontSize = 18
+    @ScaledMetric(relativeTo: .largeTitle) private var titleFontSize = 32
+    @ScaledMetric(relativeTo: .body) private var descriptionFontSize = 16
+    @ScaledMetric(relativeTo: .body) private var bodyFontSize = 16
+    @ScaledMetric(relativeTo: .caption) private var sectionTitleFontSize = 15
+    @ScaledMetric(relativeTo: .body) private var horizontalPadding = 42
+    @ScaledMetric(relativeTo: .body) private var verticalPadding = 28
 
     var body: some View {
-        VStack(spacing: 0) {
-            ReceiptTornEdge()
-                .fill(Color.white)
-                .frame(height: 16)
+        VStack(alignment: .leading, spacing: 17) {
+            VStack(spacing: 8) {
+                Text("RECIPE:UM")
+                    .font(.system(size: brandFontSize, weight: .bold, design: .monospaced))
 
-            VStack(alignment: .leading, spacing: 17) {
-                VStack(spacing: 8) {
-                    Text("RECIPE:UM")
-                        .font(.system(size: 18, weight: .bold, design: .monospaced))
+                Text(snapshot.title)
+                    .font(.system(size: titleFontSize, weight: .bold, design: .monospaced))
+                    .multilineTextAlignment(.center)
+                    .frame(maxWidth: .infinity)
 
-                    Text(snapshot.title)
-                        .font(.system(size: 36, weight: .bold, design: .monospaced))
+                if let recipeDescription = snapshot.recipeDescription {
+                    Text(recipeDescription)
+                        .font(.system(size: descriptionFontSize, design: .monospaced))
                         .multilineTextAlignment(.center)
-                        .frame(maxWidth: .infinity)
-
-                    if let recipeDescription = snapshot.recipeDescription {
-                        Text(recipeDescription)
-                            .font(.system(size: 18, design: .monospaced))
-                            .multilineTextAlignment(.center)
-                            .foregroundStyle(.secondary)
-                    }
-                }
-
-                DashedDivider()
-
-                if hasMetadata {
-                    metadataRows
-                    DashedDivider()
-                }
-
-                ingredients
-
-                if !snapshot.cookingSteps.isEmpty {
-                    DashedDivider()
-                    cookingSteps
-                }
-
-                if let personalNotes = snapshot.personalNotes {
-                    DashedDivider()
-                    textSection(title: "내 메모", text: personalNotes)
-                }
-
-                if let source = snapshot.source, source.hasDisplayContent {
-                    DashedDivider()
-                    sourceSection(source)
+                        .foregroundStyle(.secondary)
                 }
             }
-            .padding(.horizontal, 42)
-            .padding(.vertical, 28)
-            .background(Color.white)
 
-            ReceiptTornEdge()
-                .fill(Color.white)
-                .rotationEffect(.degrees(180))
-                .frame(height: 16)
+            DashedDivider()
+
+            if hasMetadata {
+                metadataRows
+                DashedDivider()
+            }
+
+            ingredients
+
+            if !snapshot.cookingSteps.isEmpty {
+                DashedDivider()
+                cookingSteps
+            }
+
+            if let personalNotes = snapshot.personalNotes {
+                DashedDivider()
+                textSection(title: "내 메모", text: personalNotes)
+            }
+
+            if let source = snapshot.source, source.hasDisplayContent {
+                DashedDivider()
+                sourceSection(source)
+            }
         }
+        .padding(.horizontal, horizontalPadding)
+        .padding(.vertical, verticalPadding)
+        .background(Color.white)
         .foregroundStyle(Color(red: 0.16, green: 0.14, blue: 0.12))
         .background(ReceiptShadowBackground())
     }
@@ -90,7 +86,7 @@ private struct ReceiptRecipeExportCard: View {
     private var metadataRows: some View {
         VStack(alignment: .leading, spacing: 8) {
             if !snapshot.servingText.isEmpty {
-                metadataRow(label: "인분", value: snapshot.servingText)
+                metadataRow(label: "분량", value: snapshot.servingText)
             }
 
             if let cookingTimeText = snapshot.cookingTimeText {
@@ -101,7 +97,7 @@ private struct ReceiptRecipeExportCard: View {
                 metadataRow(label: "분류", value: categoryName)
             }
         }
-        .font(.system(size: 18, design: .monospaced))
+        .font(.system(size: bodyFontSize, design: .monospaced))
     }
 
     private func metadataRow(label: String, value: String) -> some View {
@@ -133,7 +129,7 @@ private struct ReceiptRecipeExportCard: View {
                 }
             }
         }
-        .font(.system(size: 17, design: .monospaced))
+        .font(.system(size: bodyFontSize, design: .monospaced))
     }
 
     private var cookingSteps: some View {
@@ -149,14 +145,14 @@ private struct ReceiptRecipeExportCard: View {
                 }
             }
         }
-        .font(.system(size: 17, design: .monospaced))
+        .font(.system(size: bodyFontSize, design: .monospaced))
     }
 
     private func textSection(title: String, text: String) -> some View {
         VStack(alignment: .leading, spacing: 10) {
             sectionTitle(title)
             Text(text)
-                .font(.system(size: 17, design: .monospaced))
+                .font(.system(size: bodyFontSize, design: .monospaced))
         }
     }
 
@@ -171,12 +167,12 @@ private struct ReceiptRecipeExportCard: View {
                 metadataRow(label: "URL", value: urlString)
             }
         }
-        .font(.system(size: 16, design: .monospaced))
+        .font(.system(size: bodyFontSize, design: .monospaced))
     }
 
     private func sectionTitle(_ text: String) -> some View {
         Text(text.uppercased())
-            .font(.system(size: 15, weight: .bold, design: .monospaced))
+            .font(.system(size: sectionTitleFontSize, weight: .bold, design: .monospaced))
             .tracking(1.4)
     }
 
@@ -194,16 +190,23 @@ private struct ReceiptRecipeExportCard: View {
 
 private struct MemoRecipeExportCard: View {
     let snapshot: RecipeExportSnapshot
+    @ScaledMetric(relativeTo: .largeTitle) private var titleFontSize = 34
+    @ScaledMetric(relativeTo: .title3) private var descriptionFontSize = 18
+    @ScaledMetric(relativeTo: .body) private var bodyFontSize = 18
+    @ScaledMetric(relativeTo: .subheadline) private var metadataFontSize = 15
+    @ScaledMetric(relativeTo: .body) private var leadingPadding = 74
+    @ScaledMetric(relativeTo: .body) private var trailingPadding = 44
+    @ScaledMetric(relativeTo: .body) private var verticalPadding = 48
 
     var body: some View {
         VStack(alignment: .leading, spacing: 24) {
             VStack(alignment: .leading, spacing: 10) {
                 Text(snapshot.title)
-                    .font(.system(size: 42, weight: .bold, design: .rounded))
+                    .font(.system(size: titleFontSize, weight: .bold, design: .rounded))
 
                 if let recipeDescription = snapshot.recipeDescription {
                     Text(recipeDescription)
-                        .font(.title3)
+                        .font(.system(size: descriptionFontSize))
                         .foregroundStyle(.secondary)
                 }
             }
@@ -270,12 +273,12 @@ private struct MemoRecipeExportCard: View {
                 }
             }
         }
-        .font(.system(size: 20))
+        .font(.system(size: bodyFontSize))
         .lineSpacing(4)
         .foregroundStyle(RecipeTheme.espresso)
-        .padding(.leading, 74)
-        .padding(.trailing, 44)
-        .padding(.vertical, 48)
+        .padding(.leading, leadingPadding)
+        .padding(.trailing, trailingPadding)
+        .padding(.vertical, verticalPadding)
         .background(MemoPaperBackground())
     }
 
@@ -293,7 +296,7 @@ private struct MemoRecipeExportCard: View {
                 metadataPill(categoryName)
             }
         }
-        .font(.system(size: 16, weight: .semibold, design: .monospaced))
+        .font(.system(size: metadataFontSize, weight: .semibold, design: .monospaced))
     }
 
     private func metadataPill(_ text: String) -> some View {
@@ -330,12 +333,19 @@ private struct MemoRecipeExportCard: View {
 
 private struct RecipeIndexExportCard: View {
     let snapshot: RecipeExportSnapshot
+    @ScaledMetric(relativeTo: .body) private var brandFontSize = 16
+    @ScaledMetric(relativeTo: .largeTitle) private var titleFontSize = 34
+    @ScaledMetric(relativeTo: .body) private var bodyFontSize = 16
+    @ScaledMetric(relativeTo: .caption) private var labelFontSize = 12
+    @ScaledMetric(relativeTo: .body) private var valueFontSize = 15
+    @ScaledMetric(relativeTo: .title3) private var sectionTitleFontSize = 18
+    @ScaledMetric(relativeTo: .body) private var cardPadding = 42
 
     var body: some View {
         VStack(alignment: .leading, spacing: 22) {
             HStack(alignment: .firstTextBaseline) {
                 Text("RECIPE:UM")
-                    .font(.system(size: 17, weight: .bold, design: .monospaced))
+                    .font(.system(size: brandFontSize, weight: .bold, design: .monospaced))
                     .foregroundStyle(RecipeTheme.sage)
 
                 Spacer()
@@ -349,7 +359,7 @@ private struct RecipeIndexExportCard: View {
 
             VStack(alignment: .leading, spacing: 8) {
                 Text(snapshot.title)
-                    .font(.system(size: 40, weight: .bold, design: .serif))
+                    .font(.system(size: titleFontSize, weight: .bold, design: .serif))
 
                 if let recipeDescription = snapshot.recipeDescription {
                     Text(recipeDescription)
@@ -361,7 +371,7 @@ private struct RecipeIndexExportCard: View {
             if hasMetadata {
                 HStack(spacing: 18) {
                     if !snapshot.servingText.isEmpty {
-                        labeledText("인분", snapshot.servingText)
+                        labeledText("분량", snapshot.servingText)
                     }
 
                     if let cookingTimeText = snapshot.cookingTimeText {
@@ -389,10 +399,10 @@ private struct RecipeIndexExportCard: View {
                 sourceFooter(source)
             }
         }
-        .font(.system(size: 18))
+        .font(.system(size: bodyFontSize))
         .lineSpacing(3)
         .foregroundStyle(RecipeTheme.espresso)
-        .padding(42)
+        .padding(cardPadding)
         .background(IndexCardBackground())
     }
 
@@ -433,16 +443,16 @@ private struct RecipeIndexExportCard: View {
     private func labeledText(_ label: String, _ value: String) -> some View {
         VStack(alignment: .leading, spacing: 3) {
             Text(label)
-                .font(.system(size: 13, weight: .bold, design: .monospaced))
+                .font(.system(size: labelFontSize, weight: .bold, design: .monospaced))
                 .foregroundStyle(RecipeTheme.sage)
             Text(value)
-                .font(.system(size: 17, weight: .semibold, design: .monospaced))
+                .font(.system(size: valueFontSize, weight: .semibold, design: .monospaced))
         }
     }
 
     private func sectionTitle(_ text: String) -> some View {
         Text(text)
-            .font(.system(size: 19, weight: .bold, design: .rounded))
+            .font(.system(size: sectionTitleFontSize, weight: .bold, design: .rounded))
             .foregroundStyle(RecipeTheme.terracotta)
     }
 
@@ -471,13 +481,6 @@ private struct IndexCardBackground: View {
     var body: some View {
         ZStack {
             Color(red: 0.98, green: 0.96, blue: 0.87)
-
-            VStack(spacing: 0) {
-                Rectangle()
-                    .fill(RecipeTheme.sage.opacity(0.75))
-                    .frame(height: 8)
-                Spacer()
-            }
 
             RoundedRectangle(cornerRadius: 6)
                 .stroke(RecipeTheme.sage.opacity(0.45), lineWidth: 2)
@@ -523,27 +526,6 @@ private struct ReceiptShadowBackground: View {
             RecipeTheme.background
             Color.black.opacity(0.04)
         }
-    }
-}
-
-private struct ReceiptTornEdge: Shape {
-    func path(in rect: CGRect) -> Path {
-        var path = Path()
-        let toothWidth: CGFloat = 12
-        var x: CGFloat = 0
-
-        path.move(to: CGPoint(x: rect.minX, y: rect.maxY))
-        path.addLine(to: CGPoint(x: rect.minX, y: rect.minY))
-
-        while x < rect.maxX {
-            path.addLine(to: CGPoint(x: min(x + toothWidth / 2, rect.maxX), y: rect.minY + 5))
-            path.addLine(to: CGPoint(x: min(x + toothWidth, rect.maxX), y: rect.minY))
-            x += toothWidth
-        }
-
-        path.addLine(to: CGPoint(x: rect.maxX, y: rect.maxY))
-        path.closeSubpath()
-        return path
     }
 }
 
