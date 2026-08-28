@@ -137,7 +137,7 @@ or document-style artifacts.
 
 #### PR 1 — Export Snapshot, Image Card, And Template Preview
 
-Status: next.
+Status: done.
 
 Goal: define the export content once and generate useful image recipe cards.
 
@@ -163,16 +163,19 @@ Definition of done:
 
 #### PR 2 — Export UX Polish
 
-Status: planned.
+Status: in progress.
 
 Goal: make image export choices clear without turning sharing into a social feature.
 
 Suggested tasks:
 
 - provide a lightweight export menu or confirmation flow
-- decide whether personal notes and source metadata are included by default
-- improve export error handling and temporary file cleanup
-- update README and roadmap after Phase 3 is merged
+- make export actions directly discoverable from recipe detail
+- let users choose whether personal notes and source metadata are included
+- include personal notes by default when present
+- exclude source metadata by default unless the user opts in
+- improve export error handling and duplicate-action prevention
+- update README and roadmap after PR 1 is merged
 
 Definition of done:
 
@@ -227,6 +230,39 @@ without changing source-of-truth behavior in `SPEC.md`.
 - small navigation and editing ergonomics
 - app icon refinement after a final production icon is chosen
 
+### 8. Future Smart Input
+
+Add assistive input features only after the core archive, editing, search, and
+export flows are stable.
+
+Smart Input should reduce entry friction without turning RecipeUm into an AI
+recipe generator. All generated or extracted content should remain editable
+draft data until the user confirms it.
+
+Candidate directions:
+
+- Vision OCR for photos, recipe books, handwritten notes when readable, and
+  screenshots
+- Apple Foundation Models for turning pasted or OCR text into a structured
+  recipe draft
+- ingredient group suggestions such as basic ingredients, sauce, seasoning,
+  garnish, and topping
+- cooking step cleanup and line splitting
+- one-line summary suggestions for the existing recipe summary field
+- optional App Intents or Siri entry points after the main flows are stable
+- Core Spotlight search improvements for local recipe discovery
+
+Implementation principles:
+
+- keep manual entry, editing, search, and export fully usable without AI or OCR
+- preserve user-provided source text whenever practical
+- show AI/OCR results as suggestions, not authoritative data
+- require user review before saving generated or extracted recipe fields
+- prefer Apple on-device technologies when they fit privacy and compatibility
+  goals
+- hide or disable unsupported assists on devices without the required system
+  capabilities
+
 ## Deferred Until The Core Is Stable
 
 These features should not shape the first implementation.
@@ -236,8 +272,8 @@ These features should not shape the first implementation.
 - CloudKit sync
 - social features
 - public sharing
-- AI full recipe extraction from URL
-- OCR extraction
+- AI full recipe extraction from URL as an automatic save flow
+- OCR extraction as an automatic save flow
 - automatic serving conversion
 - shopping list automation
 

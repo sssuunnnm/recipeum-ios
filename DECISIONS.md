@@ -192,21 +192,45 @@ Users can retain recipes outside Recipe Archive and maintain greater ownership o
 
 ---
 
-## D011 — AI extraction is deferred
+## D011 — AI and OCR assistance are deferred and must remain assistive
 
 ### Context
 
-Automatic extraction from YouTube, webpages, or images may be useful but introduces complexity, accuracy concerns, API costs, and copyright considerations.
+Automatic extraction from YouTube, webpages, images, or screenshots may be
+useful, especially for reducing recipe entry friction. It also introduces
+complexity, accuracy concerns, API costs, device compatibility constraints, and
+copyright considerations.
+
+RecipeUm should remain a personal recipe archive, not an AI recipe generator.
+AI and OCR features may be valuable for the product and for demonstrating
+modern iOS engineering in a portfolio, but they should not become required for
+the core archive workflow.
 
 ### Decision
 
-Do not make AI extraction a dependency of the MVP.
+Do not make AI or OCR extraction a dependency of the MVP.
 
 Build a reliable manual + paste workflow first.
 
+If added later, AI and OCR features should be assistive:
+
+- OCR may extract text from recipe photos, books, notes, or screenshots.
+- Apple Foundation Models may help turn pasted or OCR text into a recipe draft.
+- AI may suggest ingredient groups, cooking step cleanup, and a one-line summary.
+- AI output must remain a draft that the user reviews and edits before saving.
+- The original user-provided text should be preserved whenever practical.
+- Core recipe creation, editing, searching, and exporting must continue to work
+  without AI.
+
 ### Consequence
 
-Future AI extraction can feed into the same reviewable structured recipe model instead of defining the initial architecture.
+Future AI or OCR assistance can feed into the same reviewable structured recipe
+model instead of defining the initial architecture.
+
+Using Apple Intelligence technologies, such as Vision OCR and Foundation Models,
+is preferable when it supports privacy, local-first behavior, and graceful
+device compatibility handling. Unsupported devices should hide or disable those
+optional assists rather than blocking the app.
 
 ---
 
@@ -411,3 +435,22 @@ The export phase stays smaller and closer to the most likely user workflow.
 
 If PDF export is added later, it should reuse the same export snapshot used by
 image export so that export data rules remain consistent.
+
+## D020 — Default export options protect useful personal context and source privacy
+
+### Context
+
+Image export should remain useful without turning RecipeUm into a publishing
+workflow. Some saved fields are personal and useful in an exported recipe, while
+source metadata can be long, noisy, or less appropriate for every shared image.
+
+### Decision
+
+Include personal notes by default when they exist, because they often preserve
+the user's cooking context. Exclude source metadata by default, but let users
+opt in from the export preview before saving or sharing.
+
+### Consequence
+
+The default exported image keeps the recipe useful and compact. Users can still
+create a more traceable export when source metadata matters.

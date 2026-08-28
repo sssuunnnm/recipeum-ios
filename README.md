@@ -86,9 +86,9 @@ Phase 2 Library Experience is complete:
 - PR 2: favorites
 - PR 3: category browsing and lightweight collection decision
 
-Next phase:
+Current phase:
 
-- Phase 3 Image Export: receipt/memo/card image templates, preview selection, Photos save, and native iOS share sheet
+- Phase 3 PR 2 Export UX Polish: export option toggles, clearer detail actions, Photos save, and native iOS share sheet
 
 ## Not In Scope Yet
 
@@ -97,8 +97,8 @@ Next phase:
 - CloudKit sync
 - Social features
 - Public recipe sharing
-- AI-based full recipe extraction
-- OCR extraction
+- AI-based automatic recipe extraction
+- OCR-based automatic recipe extraction
 - Automatic serving conversion
 - PDF export
 - Separate collection model
