@@ -80,7 +80,9 @@ struct RecipeExportPreviewView: View {
                 }
             }
         }
-        .sheet(item: $sharedImage) { sharedImage in
+        .sheet(item: $sharedImage, onDismiss: {
+            exportActionInProgress = nil
+        }) { sharedImage in
             ShareSheet(activityItems: [sharedImage.image])
         }
         .alert("내보내기 실패", isPresented: isShowingExportError) {
@@ -182,7 +184,6 @@ struct RecipeExportPreviewView: View {
         }
 
         exportActionInProgress = .share
-        defer { exportActionInProgress = nil }
 
         do {
             let exportedImage = try RecipeImageExporter().exportImage(
@@ -193,6 +194,7 @@ struct RecipeExportPreviewView: View {
             )
             sharedImage = SharedImage(image: exportedImage.image)
         } catch {
+            exportActionInProgress = nil
             exportErrorMessage = error.localizedDescription
         }
     }

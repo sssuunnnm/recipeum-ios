@@ -62,8 +62,7 @@ struct RecipeEditorView: View {
                         }
                     }
 
-                    TextField("한 줄 요약", text: $draft.recipeDescription, axis: .vertical)
-                        .lineLimit(1...2)
+                    TextField("한 줄 요약", text: $draft.recipeDescription)
                 } header: {
                     Text("상단 정보")
                 } footer: {

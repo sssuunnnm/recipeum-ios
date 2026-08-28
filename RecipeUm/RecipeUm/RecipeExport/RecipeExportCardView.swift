@@ -29,6 +29,7 @@ private struct ReceiptRecipeExportCard: View {
     @ScaledMetric(relativeTo: .largeTitle) private var titleFontSize = 32
     @ScaledMetric(relativeTo: .body) private var descriptionFontSize = 16
     @ScaledMetric(relativeTo: .body) private var bodyFontSize = 16
+    @ScaledMetric(relativeTo: .subheadline) private var groupTitleFontSize = 16
     @ScaledMetric(relativeTo: .caption) private var sectionTitleFontSize = 15
     @ScaledMetric(relativeTo: .body) private var horizontalPadding = 42
     @ScaledMetric(relativeTo: .body) private var verticalPadding = 28
@@ -116,7 +117,7 @@ private struct ReceiptRecipeExportCard: View {
                 VStack(alignment: .leading, spacing: 8) {
                     if shouldShowIngredientGroupTitle {
                         Text(group.title)
-                            .font(.system(size: 16, weight: .bold, design: .monospaced))
+                            .font(.system(size: groupTitleFontSize, weight: .bold, design: .monospaced))
                     }
 
                     ForEach(group.ingredients) { ingredient in
@@ -194,6 +195,7 @@ private struct MemoRecipeExportCard: View {
     @ScaledMetric(relativeTo: .title3) private var descriptionFontSize = 18
     @ScaledMetric(relativeTo: .body) private var bodyFontSize = 18
     @ScaledMetric(relativeTo: .subheadline) private var metadataFontSize = 15
+    @ScaledMetric(relativeTo: .subheadline) private var urlFontSize = 16
     @ScaledMetric(relativeTo: .body) private var leadingPadding = 74
     @ScaledMetric(relativeTo: .body) private var trailingPadding = 44
     @ScaledMetric(relativeTo: .body) private var verticalPadding = 48
@@ -267,7 +269,7 @@ private struct MemoRecipeExportCard: View {
                         }
                         if let urlString = source.urlString {
                             Text(urlString)
-                                .font(.system(size: 16, design: .monospaced))
+                                .font(.system(size: urlFontSize, design: .monospaced))
                         }
                     }
                 }
@@ -335,10 +337,14 @@ private struct RecipeIndexExportCard: View {
     let snapshot: RecipeExportSnapshot
     @ScaledMetric(relativeTo: .body) private var brandFontSize = 16
     @ScaledMetric(relativeTo: .largeTitle) private var titleFontSize = 34
+    @ScaledMetric(relativeTo: .subheadline) private var categoryFontSize = 16
+    @ScaledMetric(relativeTo: .body) private var descriptionFontSize = 18
     @ScaledMetric(relativeTo: .body) private var bodyFontSize = 16
+    @ScaledMetric(relativeTo: .subheadline) private var groupTitleFontSize = 16
     @ScaledMetric(relativeTo: .caption) private var labelFontSize = 12
     @ScaledMetric(relativeTo: .body) private var valueFontSize = 15
     @ScaledMetric(relativeTo: .title3) private var sectionTitleFontSize = 18
+    @ScaledMetric(relativeTo: .caption) private var sourceFooterFontSize = 14
     @ScaledMetric(relativeTo: .body) private var cardPadding = 42
 
     var body: some View {
@@ -352,7 +358,7 @@ private struct RecipeIndexExportCard: View {
 
                 if let categoryName = snapshot.categoryName {
                     Text(categoryName)
-                        .font(.system(size: 16, weight: .semibold, design: .monospaced))
+                        .font(.system(size: categoryFontSize, weight: .semibold, design: .monospaced))
                         .foregroundStyle(RecipeTheme.terracotta)
                 }
             }
@@ -363,7 +369,7 @@ private struct RecipeIndexExportCard: View {
 
                 if let recipeDescription = snapshot.recipeDescription {
                     Text(recipeDescription)
-                        .font(.system(size: 18))
+                        .font(.system(size: descriptionFontSize))
                         .foregroundStyle(.secondary)
                 }
             }
@@ -415,7 +421,7 @@ private struct RecipeIndexExportCard: View {
                     VStack(alignment: .leading, spacing: 7) {
                         if shouldShowIngredientGroupTitle {
                             Text(group.title)
-                                .font(.system(size: 16, weight: .bold))
+                                .font(.system(size: groupTitleFontSize, weight: .bold))
                                 .foregroundStyle(RecipeTheme.sage)
                         }
 
@@ -462,7 +468,7 @@ private struct RecipeIndexExportCard: View {
                 .overlay(RecipeTheme.sage.opacity(0.5))
 
             Text([source.typeName, source.titleOrMemo, source.urlString].compactMap(\.self).joined(separator: " | "))
-                .font(.system(size: 14, design: .monospaced))
+                .font(.system(size: sourceFooterFontSize, design: .monospaced))
                 .foregroundStyle(.secondary)
         }
     }
